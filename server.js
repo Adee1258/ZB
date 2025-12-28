@@ -9,9 +9,9 @@ const fs = require("fs");
 const mongoose = require("mongoose");
 
 // Models (case-sensitive filenames ke hisab se)
-const Product = require("./server/models/Product.js");
-const Order = require("./server/models/Order.js");
-const Contact = require("./server/models/Contact.js");
+const Product = require("./server/models/product.js");
+const Order = require("./server/models/order.js");
+const Contact = require("./server/models/contact.js");
 
 const app = express();
 
