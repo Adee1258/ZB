@@ -72,14 +72,19 @@ if (fs.existsSync(adminPath)) {
   );
 }
 
-const uploadsPath = path.join(__dirname, "public", "uploads");
+const isServerless = !!process.env.VERCEL;
+const uploadsPath = isServerless
+  ? path.join("/tmp", "uploads")
+  : path.join(__dirname, "public", "uploads");
 console.log("Uploads path:", uploadsPath);
 if (!fs.existsSync(uploadsPath)) {
   fs.mkdirSync(uploadsPath, { recursive: true });
   console.log("Created uploads folder in backend.");
 }
 
-const adminDpPath = path.join(__dirname, "public", "admin-dp");
+const adminDpPath = isServerless
+  ? path.join("/tmp", "admin-dp")
+  : path.join(__dirname, "public", "admin-dp");
 console.log("Admin DP path:", adminDpPath);
 if (!fs.existsSync(adminDpPath)) {
   fs.mkdirSync(adminDpPath, { recursive: true });
@@ -89,8 +94,7 @@ if (!fs.existsSync(adminDpPath)) {
 // Multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dest = req.body.type === "dp" ? "public/admin-dp" : "public/uploads";
-    const fullPath = path.join(__dirname, dest);
+    const fullPath = req.body.type === "dp" ? adminDpPath : uploadsPath;
     if (!fs.existsSync(fullPath)) {
       fs.mkdirSync(fullPath, { recursive: true });
     }
@@ -403,10 +407,14 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`\nBACKEND SERVER RUNNING ON PORT ${PORT}`);
-  console.log(`→ Admin Login: POST http://localhost:${PORT}/api/admin/login`);
-  console.log(`→ Images: http://localhost:${PORT}/uploads/filename.jpg`);
-  console.log(`→ Test Frontend: http://localhost:${PORT}/`);
-  console.log(`→ Test Admin Login: http://localhost:${PORT}/admin/login.html`);
-});
+if (process.env.VERCEL) {
+  module.exports = (req, res) => app(req, res);
+} else {
+  app.listen(PORT, () => {
+    console.log(`\nBACKEND SERVER RUNNING ON PORT ${PORT}`);
+    console.log(`→ Admin Login: POST http://localhost:${PORT}/api/admin/login`);
+    console.log(`→ Images: http://localhost:${PORT}/uploads/filename.jpg`);
+    console.log(`→ Test Frontend: http://localhost:${PORT}/`);
+    console.log(`→ Test Admin Login: http://localhost:${PORT}/admin/login.html`);
+  });
+}
