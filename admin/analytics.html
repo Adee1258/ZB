@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analytics Dashboard - ZIKRIYA DARBAR FOOD PRODUCTS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: { extend: { fontFamily: { sans: ["Poppins", "sans-serif"] } } },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+      }
+      .sidebar {
+        background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+        height: 100vh;
+        overflow-y: auto;
+      }
+      .fade-in {
+        animation: fadeIn 0.6s ease-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .loading-spinner {
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .chart-container {
+        position: relative;
+        height: 500px;
+      }
+      .stats-card {
+        transition: all 0.3s ease;
+      }
+      .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 min-h-screen flex"
+  >
+    <!-- Sidebar (same as before) -->
+    <div
+      class="sidebar text-white flex flex-col z-50 md:flex-shrink-0 w-64 fixed md:relative h-screen overflow-y-auto transition-transform duration-300 -translate-x-full md:translate-x-0"
+      id="sidebar"
+    >
+      <div class="p-4 border-b border-blue-400 flex-shrink-0">
+        <h1 class="text-2xl font-bold">Admin Panel</h1>
+        <p class="text-sm opacity-90">Professional Dashboard</p>
+      </div>
+
+      <!-- Admin Profile Section in Sidebar -->
+      <div class="p-4 border-b border-blue-300 bg-blue-600 bg-opacity-50">
+        <div class="text-center">
+          <img
+            id="sidebarAdminDP"
+            src="/admin-dp/logo.jpeg"
+            alt="Admin"
+            class="w-16 h-16 rounded-full mx-auto mb-2 border-2 border-white object-cover"
+            onerror="this.onerror=null;this.src='/admin-dp/logo.jpeg';"
+          />
+          <p id="sidebarAdminName" class="font-semibold text-white">Admin</p>
+          <p class="text-xs text-blue-100">Administrator</p>
+        </div>
+      </div>
+      <nav class="flex-1 p-4 overflow-y-auto">
+        <ul class="space-y-2">
+          <li>
+            <a
+              href="/admin/dashboard.html"
+              class="flex items-center p-3 rounded-lg hover:bg-blue-500 transition"
+              ><i class="fas fa-tachometer-alt mr-3"></i> Dashboard</a
+            >
+          </li>
+          <li>
+            <a
+              href="/admin/add-product.html"
+              class="flex items-center p-3 rounded-lg hover:bg-blue-500 transition"
+              ><i class="fas fa-plus mr-3"></i> Add Product</a
+            >
+          </li>
+          <li>
+            <a
+              href="/admin/analytics.html"
+              class="flex items-center p-3 rounded-lg hover:bg-blue-500 transition"
+              ><i class="fas fa-chart-bar mr-3"></i> Analytics</a
+            >
+          </li>
+          <li>
+            <a
+              href="/"
+              class="flex items-center p-3 rounded-lg hover:bg-blue-500 transition"
+              ><i class="fas fa-home mr-3"></i> Return to Website</a
+            >
+          </li>
+          <li>
+            <button
+              onclick="logout()"
+              class="flex items-center p-3 rounded-lg hover:bg-red-500 transition w-full text-left"
+            >
+              <i class="fas fa-sign-out-alt mr-3"></i> Logout
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 md:ml-64 p-6 min-h-screen">
+      <div class="flex justify-between items-center mb-8 fade-in">
+        <div>
+          <h1 class="text-4xl font-bold text-gray-800">Analytics Dashboard</h1>
+          <p class="text-gray-600 mt-1">
+            Real-time sales, revenue & stock insights
+          </p>
+        </div>
+        <div class="space-x-4">
+          <button
+            onclick="loadData()"
+            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <i class="fas fa-sync mr-2"></i> Refresh Data
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="stats-card bg-white p-6 rounded-2xl shadow-lg">
+          <h3 class="text-lg font-semibold text-gray-600">Total Revenue</h3>
+          <p class="text-3xl font-bold text-green-600 mt-2" id="totalRevenue">
+            Rs 0
+          </p>
+        </div>
+        <div class="stats-card bg-white p-6 rounded-2xl shadow-lg">
+          <h3 class="text-lg font-semibold text-gray-600">Total Orders</h3>
+          <p
+            class="text-3xl font-bold text-blue-600 mt-2"
+            id="totalOrdersCount"
+          >
+            0
+          </p>
+        </div>
+        <div class="stats-card bg-white p-6 rounded-2xl shadow-lg">
+          <h3 class="text-lg font-semibold text-gray-600">
+            Total Products Sold
+          </h3>
+          <p class="text-3xl font-bold text-purple-600 mt-2" id="totalQty">0</p>
+        </div>
+        <div class="stats-card bg-white p-6 rounded-2xl shadow-lg">
+          <h3 class="text-lg font-semibold text-gray-600">Low Stock Items</h3>
+          <p class="text-3xl font-bold text-red-600 mt-2" id="lowStockCount">
+            0
+          </p>
+        </div>
+      </div>
+
+      <!-- Chart Loader -->
+      <div id="chartLoader" class="text-center py-20">
+        <i
+          class="fas fa-spinner loading-spinner text-4xl text-blue-500 mb-4"
+        ></i>
+        <p class="text-xl text-gray-600">Loading analytics data...</p>
+      </div>
+
+      <!-- Chart -->
+      <div
+        id="chartContainer"
+        class="bg-white rounded-2xl shadow-lg p-6 hidden"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-gray-800">Monthly Performance</h2>
+          <div class="space-x-2">
+            <button
+              onclick="exportReport()"
+              class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              Export PNG
+            </button>
+            <button
+              onclick="toggleZoom()"
+              class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+            >
+              Toggle Zoom
+            </button>
+          </div>
+        </div>
+        <canvas id="proChart" class="chart-container"></canvas>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:5000";
+      const token = localStorage.getItem("adminToken");
+      if (!token) window.location.href = "/admin/login.html";
+
+      let chart = null;
+      let isZoomed = false;
+      let orders = [];
+      let products = [];
+
+      async function loadData() {
+        document.getElementById("chartLoader").classList.remove("hidden");
+        document.getElementById("chartContainer").classList.add("hidden");
+
+        try {
+          const [ordersRes, productsRes] = await Promise.all([
+            fetch("/api/admin/orders", {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            fetch("/api/admin/products", {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
+
+          orders = await ordersRes.json();
+          products = await productsRes.json();
+
+          updateStats();
+          createProGraph();
+        } catch (error) {
+          console.error("Error loading data:", error);
+          alert("Failed to load analytics data. Check login or server.");
+        }
+      }
+
+      function updateStats() {
+        const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+        const totalOrdersCount = orders.length;
+        const totalQty = orders.reduce((sum, o) => sum + o.qty, 0);
+        const lowStockCount = products.filter((p) => p.stock < 10).length;
+
+        document.getElementById(
+          "totalRevenue"
+        ).textContent = `Rs ${totalRevenue.toFixed(0)}`;
+        document.getElementById("totalOrdersCount").textContent =
+          totalOrdersCount;
+        document.getElementById("totalQty").textContent = totalQty;
+        document.getElementById("lowStockCount").textContent = lowStockCount;
+      }
+
+      function createProGraph() {
+        const monthlyData = {};
+        const months = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+
+        months.forEach((m) => {
+          monthlyData[m] = { sales: 0, revenue: 0, orders: 0 };
+        });
+
+        orders.forEach((order) => {
+          const date = new Date(order.createdAt);
+          const month = months[date.getMonth()];
+          if (monthlyData[month]) {
+            monthlyData[month].sales += order.qty;
+            monthlyData[month].revenue += order.total;
+            monthlyData[month].orders += 1;
+          }
+        });
+
+        const labels = months;
+        const salesData = months.map((m) => monthlyData[m].sales);
+        const revenueData = months.map((m) => monthlyData[m].revenue);
+        const ordersData = months.map((m) => monthlyData[m].orders);
+        const alertsData = months.map(() => Math.floor(Math.random() * 5)); // Fake alerts for demo
+
+        const ctx = document.getElementById("proChart").getContext("2d");
+
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Products Sold",
+                data: salesData,
+                backgroundColor: "#10b981",
+                yAxisID: "y-sales",
+              },
+              {
+                label: "Revenue (Rs)",
+                data: revenueData,
+                backgroundColor: "#3b82f6",
+                yAxisID: "y-revenue",
+              },
+              {
+                label: "Orders",
+                data: ordersData,
+                type: "line",
+                borderColor: "#f59e0b",
+                yAxisID: "y-alerts",
+                tension: 0.4,
+              },
+              {
+                label: "Stock Alerts",
+                data: alertsData,
+                type: "line",
+                borderColor: "#ef4444",
+                yAxisID: "y-alerts",
+                tension: 0.4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    let label = context.dataset.label || "";
+                    if (label) label += ": ";
+                    label +=
+                      context.parsed.y.toLocaleString() +
+                      (label.includes("Rs") ? " Rs" : "");
+                    return label;
+                  },
+                },
+              },
+            },
+            scales: {
+              x: { title: { display: true, text: "Months" } },
+              "y-sales": {
+                position: "left",
+                title: { display: true, text: "Products Sold" },
+              },
+              "y-revenue": {
+                position: "right",
+                title: { display: true, text: "Revenue (Rs)" },
+                grid: { drawOnChartArea: false },
+              },
+              "y-alerts": {
+                position: "right",
+                title: { display: true, text: "Orders / Alerts" },
+                grid: { drawOnChartArea: false },
+              },
+            },
+            animation: { duration: 2000, easing: "easeInOutQuart" },
+          },
+        });
+
+        document.getElementById("chartLoader").classList.add("hidden");
+        document.getElementById("chartContainer").classList.remove("hidden");
+      }
+
+      function exportReport() {
+        if (chart) {
+          const link = document.createElement("a");
+          link.download = "ZIKRIYA-DARBAR-analytics.png";
+          link.href = chart.toBase64Image();
+          link.click();
+        }
+      }
+
+      function toggleZoom() {
+        isZoomed = !isZoomed;
+        chart.options.scales.x.min = isZoomed ? 6 : undefined; // Last 6 months zoom
+        chart.options.scales.x.max = isZoomed ? 11 : undefined;
+        chart.update();
+      }
+
+      function toggleSidebar() {
+        document
+          .getElementById("sidebar")
+          .classList.toggle("-translate-x-full");
+      }
+
+      function logout() {
+        if (confirm("Logout?")) {
+          localStorage.removeItem("adminToken");
+          window.location.href = "/";
+        }
+      }
+
+      // Load Admin Profile for Sidebar
+      async function loadAdminProfile() {
+        try {
+          const res = await fetch(`${API_BASE}/api/admin/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (!res.ok) {
+            console.log("Could not load admin profile");
+            return;
+          }
+
+          const data = await res.json();
+          console.log("Admin profile loaded:", data);
+
+          // Update sidebar with admin info
+          if (data.username) {
+            document.getElementById("sidebarAdminName").textContent =
+              data.username;
+          }
+
+          if (data.dp) {
+            const dpUrl = `${API_BASE}${data.dp}?t=${new Date().getTime()}`;
+            document.getElementById("sidebarAdminDP").src = dpUrl;
+          }
+        } catch (error) {
+          console.error("Error loading admin profile:", error);
+        }
+      }
+
+      // Load on start
+      loadAdminProfile();
+      loadData();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About Us - ZIKRIYA DARBAR FOOD PRODUCTS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: { extend: { fontFamily: { sans: ["Poppins", "sans-serif"] } } },
+      };
+    </script>
+    <style>
+      .hero-about {
+        background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)),
+          url("https://thumbs.dreamstime.com/b/dry-colorful-spices-spoons-bowls-fresh-seasoning-dark-rustic-wooden-background-top-view-border-59439636.jpg");
+        background-size: cover;
+        background-position: center;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <!-- Super Enhanced NAVBAR (Updated: Contact Us → Full Page) -->
+    <nav
+      class="fixed top-0 w-full bg-white/95 backdrop-blur-md shadow-lg z-50 transition-all duration-300"
+    >
+      <div class="mx-auto px-0">
+        <div class="flex justify-between items-center py-4">
+          <!-- Left Side -->
+          <div class="flex items-center space-x-6 pl-4 md:pl-8">
+            <img
+              src="/images/logo.jpeg"
+              alt="ZIKRIYA DARBAR FOOD PRODUCTS Logo"
+              class="h-24 w-24 object-contain rounded-full shadow-2xl border-4 border-orange-500 ring-4 ring-orange-200"
+              onerror="this.src='https://via.placeholder.com/96?text=ZD';"
+            />
+            <h1
+              class="text-2xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-yellow-600 tracking-wide"
+            >
+              ZIKRIYA DARBAR FOOD PRODUCTS
+            </h1>
+          </div>
+
+          <!-- Right Side (Desktop) -->
+          <div class="hidden md:flex items-center space-x-8 pr-4 md:pr-8">
+            <a
+              href="index.html"
+              class="text-gray-700 hover:text-orange-600 font-medium transition duration-300 text-lg"
+            >
+              Home
+            </a>
+            <a
+              href="/#products"
+              class="text-gray-700 hover:text-orange-600 font-medium transition duration-300 text-lg"
+            >
+              Products
+            </a>
+            <a
+              href="About.html"
+              class="text-gray-700 hover:text-orange-600 font-medium transition duration-300 text-lg"
+            >
+              About Us
+            </a>
+            <!-- Updated: Now opens full contact page -->
+            <a
+              href="contact.html"
+              class="text-gray-700 hover:text-orange-600 font-medium transition duration-300 text-lg"
+            >
+              Contact Us
+            </a>
+            <a
+              href="/admin"
+              class="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold px-6 py-3 rounded-full shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-red-700 transition duration-300"
+            >
+              Admin Panel
+            </a>
+          </div>
+
+          <!-- Mobile Buttons -->
+          <div class="md:hidden flex items-center space-x-4 pr-4">
+            <button onclick="toggleMobileMenu()" class="p-3">
+              <i class="fas fa-bars text-2xl text-gray-700"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div
+          id="mobileMenu"
+          class="hidden md:hidden absolute top-full left-0 w-full bg-white/98 backdrop-blur-lg shadow-2xl"
+        >
+          <div class="flex flex-col items-center py-8 space-y-6">
+            <a
+              href="/"
+              class="text-xl font-medium text-gray-700 hover:text-orange-600 transition"
+              onclick="toggleMobileMenu()"
+              >Home</a
+            >
+            <a
+              href="/#products"
+              class="text-xl font-medium text-gray-700 hover:text-orange-600 transition"
+              onclick="toggleMobileMenu()"
+              >Products</a
+            >
+            <a
+              href="/about.html"
+              class="text-xl font-medium text-gray-700 hover:text-orange-600 transition"
+              onclick="toggleMobileMenu()"
+              >About Us</a
+            >
+            <!-- Updated: Now opens full contact page -->
+            <a
+              href="/contact.html"
+              class="text-xl font-medium text-gray-700 hover:text-orange-600 transition"
+              onclick="toggleMobileMenu()"
+              >Contact Us</a
+            >
+            <a
+              href="/admin"
+              class="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold px-8 py-4 rounded-full shadow-lg text-xl"
+            >
+              Admin Panel
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section
+      class="hero-about h-96 flex items-center justify-center text-center text-white pt-20"
+    >
+      <div>
+        <h1 class="text-5xl md:text-7xl font-bold mb-4">
+          About <span class="text-orange-400">ZIKRIYA DARBAR</span>
+        </h1>
+        <p class="text-2xl">Legacy of Quality & Authentic Taste</p>
+      </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="py-20 bg-white">
+      <div class="container mx-auto px-6 max-w-6xl">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <!-- Owner Photo -->
+          <div class="flex justify-center">
+            <div class="relative">
+              <img
+                src="/images/Owner.jpeg"
+                alt="Founder / Owner"
+                class="w-80 h-80 md:w-96 md:h-96 rounded-full object-cover border-8 border-orange-400 shadow-2xl"
+                onerror="this.src='https://via.placeholder.com/400?text=Owner';"
+              />
+              <div
+                class="absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-red-600 to-orange-600 text-white px-8 py-4 rounded-full text-xl font-bold shadow-2xl"
+              >
+                Founder & Owner
+              </div>
+            </div>
+          </div>
+
+          <!-- Text -->
+          <div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-8">Our Journey</h2>
+            <p class="text-lg text-gray-700 leading-relaxed mb-6">
+              ZIKRIYA DARBAR FOOD PRODUCTS is more than a business – it's a
+              legacy of trust and quality. We specialize in premium spices and
+              fresh seafood, carefully sourced to bring authentic flavors to
+              shops across Pakistan.
+            </p>
+            <p class="text-lg text-gray-700 leading-relaxed mb-8">
+              With direct connections to farmers and fishermen, we ensure every
+              product is fresh, halal, and packed with natural taste – at the
+              best wholesale prices.
+            </p>
+            <div class="grid grid-cols-2 gap-6">
+              <div class="text-center p-6 bg-orange-50 rounded-2xl">
+                <i class="fas fa-check-circle text-4xl text-green-600 mb-4"></i>
+                <p class="font-bold">100% Fresh & Halal</p>
+              </div>
+              <div class="text-center p-6 bg-orange-50 rounded-2xl">
+                <i class="fas fa-truck text-4xl text-green-600 mb-4"></i>
+                <p class="font-bold">Fast Nationwide Delivery</p>
+              </div>
+              <div class="text-center p-6 bg-orange-50 rounded-2xl">
+                <i class="fas fa-tags text-4xl text-green-600 mb-4"></i>
+                <p class="font-bold">Best Wholesale Rates</p>
+              </div>
+              <div class="text-center p-6 bg-orange-50 rounded-2xl">
+                <i class="fas fa-handshake text-4xl text-green-600 mb-4"></i>
+                <p class="font-bold">Trusted B2B Partner</p>
+              </div>
+            </div>
+            <p
+              class="text-2xl italic text-gray-600 mt-12 text-right font-medium"
+            >
+              "Quality is our tradition. Trust is our promise."
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer (Updated Contact link) -->
+    <footer class="bg-gray-800 text-white py-8 mt-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-4 gap-8">
+          <div>
+            <h3 class="text-lg font-bold mb-4 flex items-center">
+              ZIKRIYA DARBAR FOOD PRODUCTS
+            </h3>
+            <p class="text-gray-400">
+              Premium spices & fish for B2B. Fresh, authentic, delivered fast.
+            </p>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+            <ul class="space-y-2 text-gray-400">
+              <li><a href="/" class="hover:text-white transition">Home</a></li>
+              <li>
+                <a href="/#products" class="hover:text-white transition"
+                  >Products</a
+                >
+              </li>
+              <li>
+                <a href="/about.html" class="hover:text-white transition"
+                  >About Us</a
+                >
+              </li>
+              <li>
+                <a href="/contact.html" class="hover:text-white transition"
+                  >Contact</a
+                >
+              </li>
+              <li>
+                <a href="/admin" class="hover:text-white transition">Admin</a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Support</h4>
+            <ul class="space-y-2 text-gray-400">
+              <li><a href="#" class="hover:text-white transition">FAQ</a></li>
+              <li>
+                <a href="#" class="hover:text-white transition">Shipping</a>
+              </li>
+              <li>
+                <a href="#" class="hover:text-white transition">Returns</a>
+              </li>
+              <li>
+                <a href="#" class="hover:text-white transition"
+                  >Privacy Policy</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Follow Us</h4>
+            <div class="flex space-x-4">
+              <a href="#" class="text-gray-400 hover:text-white transition"
+                ><i class="fab fa-facebook-f text-xl"></i
+              ></a>
+              <a href="#" class="text-gray-400 hover:text-white transition"
+                ><i class="fab fa-instagram text-xl"></i
+              ></a>
+              <a href="#" class="text-gray-400 hover:text-white transition"
+                ><i class="fab fa-twitter text-xl"></i
+              ></a>
+            </div>
+            <p class="text-sm text-gray-400 mt-4">
+              Contact: +92 300 1234567 | Email: info@masalasupply.pk
+            </p>
+          </div>
+        </div>
+        <div
+          class="border-t border-gray-700 mt-8 pt-4 text-center text-gray-400"
+        >
+          <p>
+            &copy; 2025 ZIKRIYA DARBAR FOOD PRODUCTS. All rights reserved. |
+            Made with ❤️ in Pakistan
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Script (Only Dark Mode + Mobile Menu) -->
+    <script>
+      // Mobile Menu Toggle
+      function toggleMobileMenu() {
+        document.getElementById("mobileMenu").classList.toggle("hidden");
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - ZIKRIYA DARBAR FOOD PRODUCTS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100">
+    <!-- Sidebar Include -->
+    <div id="sidebarContainer"></div>
+    <script>
+      fetch("/admin/sidebar.html")
+        .then((res) => res.text())
+        .then((html) => {
+          document.getElementById("sidebarContainer").innerHTML = html;
+        });
+    </script>
+
+    <!-- Main Content -->
+    <div class="ml-0 md:ml-64 p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Dashboard</h1>
+        <button
+          onclick="toggleSidebar()"
+          class="md:hidden p-2 bg-blue-500 text-white rounded"
+        >
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold">Total Products</h3>
+          <p class="text-2xl font-bold text-blue-600" id="totalProducts">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold">Low Stock</h3>
+          <p class="text-2xl font-bold text-red-600" id="lowStock">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold">Orders</h3>
+          <p class="text-2xl font-bold text-green-600">0</p>
+          <!-- Fake for now -->
+        </div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="bg-white p-4 rounded-lg shadow mb-6">
+        <input
+          type="text"
+          id="searchAdmin"
+          placeholder="Search products..."
+          class="w-full p-2 border rounded"
+          oninput="loadProducts()"
+        />
+      </div>
+
+      <!-- Products Table -->
+      <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full">
+          <thead class="bg-gray-200">
+            <tr>
+              <th class="px-4 py-2 text-left">Name</th>
+              <th class="px-4 py-2 text-left">Price</th>
+              <th class="px-4 py-2 text-left">Stock</th>
+              <th class="px-4 py-2 text-left">Category</th>
+              <th class="px-4 py-2 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productsTable">
+            <!-- Load ho jayenge -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const token = localStorage.getItem("adminToken");
+      if (!token) window.location.href = "/admin/login.html";
+
+      let allProducts = [];
+
+      async function loadProducts() {
+        const res = await fetch("/api/admin/products", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        allProducts = await res.json();
+        const search = document
+          .getElementById("searchAdmin")
+          .value.toLowerCase();
+        let filtered = allProducts.filter((p) =>
+          p.name.toLowerCase().includes(search)
+        );
+        displayProducts(filtered);
+        updateStats(allProducts);
+      }
+
+      function displayProducts(prods) {
+        const tbody = document.getElementById("productsTable");
+        tbody.innerHTML = prods
+          .map(
+            (p) => `
+                <tr class="${p.stock < 10 ? "bg-red-50" : ""}">
+                    <td class="px-4 py-2">${p.name}</td>
+                    <td class="px-4 py-2">Rs ${p.price}</td>
+                    <td class="px-4 py-2 ${
+                      p.stock < 10 ? "text-red-600 font-bold" : ""
+                    }">${p.stock}</td>
+                    <td class="px-4 py-2">${p.category}</td>
+                    <td class="px-4 py-2">
+                        <a href="/admin/add-product.html?id=${
+                          p._id
+                        }" class="bg-yellow-500 text-white px-3 py-1 rounded mr-2">Edit</a>
+                        <button onclick="deleteProduct('${
+                          p._id
+                        }')" class="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
+                    </td>
+                </tr>
+            `
+          )
+          .join("");
+      }
+
+      function updateStats(prods) {
+        document.getElementById("totalProducts").textContent = prods.length;
+        document.getElementById("lowStock").textContent = prods.filter(
+          (p) => p.stock < 10
+        ).length;
+      }
+
+      async function deleteProduct(id) {
+        if (confirm("Delete this product?")) {
+          await fetch(`/api/admin/products/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          loadProducts();
+        }
+      }
+
+      // Sidebar functions (from sidebar.html)
+      function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        sidebar.classList.toggle("-translate-x-full");
+      }
+
+      loadProducts(); // On load
+    </script>
+  </body>
+</html>
+
+<div
+  class="flex flex-col h-screen bg-gradient-to-b from-blue-700 to-blue-900 shadow-xl w-64 fixed z-50 transition-all duration-300"
+  id="sidebar"
+>
+  <!-- Logo & Collapse Button -->
+  <div
+    class="flex items-center justify-between px-6 py-5 border-b border-blue-600"
+  >
+    <div class="flex items-center space-x-3">
+      <img
+        src="/admin-dp/logo.jpeg"
+        alt="Logo"
+        class="w-12 h-12 rounded-full border-2 border-white shadow-md object-cover"
+      />
+      <span class="text-white text-2xl font-bold tracking-wide"
+        >Zikriya Admin</span
+      >
+    </div>
+    <button
+      onclick="toggleSidebar()"
+      class="md:hidden text-white focus:outline-none"
+    >
+      <i class="fas fa-times text-xl"></i>
+    </button>
+  </div>
+  <!-- User Info -->
+  <div
+    class="flex flex-col items-center py-6 border-b border-blue-600 bg-blue-800 bg-opacity-60"
+  >
+    <img
+      src="/admin-dp/logo.jpeg"
+      alt="Admin"
+      class="w-16 h-16 rounded-full border-2 border-white shadow object-cover mb-2"
+    />
+    <div class="text-white font-semibold text-lg">Admin</div>
+    <div class="text-blue-200 text-xs">Administrator</div>
+  </div>
+  <!-- Navigation -->
+  <nav class="flex-1 px-4 py-6 overflow-y-auto">
+    <div class="mb-4 text-blue-200 text-xs uppercase tracking-widest pl-2">
+      Main
+    </div>
+    <ul class="space-y-1">
+      <li>
+        <a
+          href="/admin/dashboard.html"
+          class="flex items-center px-4 py-3 rounded-lg text-white hover:bg-blue-600 transition group font-medium"
+        >
+          <i
+            class="fas fa-tachometer-alt mr-3 text-blue-200 group-hover:text-white"
+          ></i>
+          Dashboard
+        </a>
+      </li>
+      <li>
+        <a
+          href="/admin/add-product.html"
+          class="flex items-center px-4 py-3 rounded-lg text-white hover:bg-blue-600 transition group font-medium"
+        >
+          <i class="fas fa-plus mr-3 text-blue-200 group-hover:text-white"></i>
+          Add Product
+        </a>
+      </li>
+      <li>
+        <a
+          href="/admin/analytics.html"
+          class="flex items-center px-4 py-3 rounded-lg text-white hover:bg-blue-600 transition group font-medium"
+        >
+          <i
+            class="fas fa-chart-bar mr-3 text-blue-200 group-hover:text-white"
+          ></i>
+          Analytics
+        </a>
+      </li>
+    </ul>
+    <div class="mt-8 mb-4 text-blue-200 text-xs uppercase tracking-widest pl-2">
+      Other
+    </div>
+    <ul class="space-y-1">
+      <li>
+        <a
+          href="/"
+          class="flex items-center px-4 py-3 rounded-lg text-white hover:bg-blue-600 transition group font-medium"
+        >
+          <i class="fas fa-home mr-3 text-blue-200 group-hover:text-white"></i>
+          Return to Website
+        </a>
+      </li>
+      <li>
+        <button
+          onclick="logout()"
+          class="flex items-center px-4 py-3 rounded-lg text-white hover:bg-red-600 transition w-full text-left font-medium"
+        >
+          <i
+            class="fas fa-sign-out-alt mr-3 text-blue-200 group-hover:text-white"
+          ></i>
+          Logout
+        </button>
+      </li>
+    </ul>
+  </nav>
+  <!-- Footer -->
+  <div
+    class="px-6 py-4 border-t border-blue-700 text-xs text-blue-300 text-center"
+  >
+    &copy; <span id="year"></span> Zikriya Darbar Foods
+  </div>
+</div>
+<script>
+  function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    sidebar.classList.toggle("-translate-x-full");
+  }
+  function logout() {
+    if (confirm("Logout and return to website?")) {
+      localStorage.removeItem("adminToken");
+      window.location.href = "/";
+    }
+  }
+  document.getElementById("year").textContent = new Date().getFullYear();
+  // Highlight active link
+  const links = document.querySelectorAll("#sidebar nav a");
+  links.forEach((link) => {
+    if (
+      window.location.pathname.endsWith(
+        link.getAttribute("href").split("/").pop()
+      )
+    ) {
+      link.classList.add("bg-blue-600", "font-bold");
+    }
+  });
+</script>

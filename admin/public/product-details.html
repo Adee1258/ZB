@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Details - ZIKRIYA DARBAR FOOD PRODUCTS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script>
+      tailwind.config = {
+        theme: { extend: { fontFamily: { sans: ["Poppins", "sans-serif"] } } },
+      };
+
+      // API Configuration
+      const API_BASE = "http://localhost:5000";
+    </script>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+      }
+      .carousel-img {
+        transition: transform 0.3s ease;
+      }
+      .carousel-img:hover {
+        transform: scale(1.05);
+      }
+      .loading-spinner {
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .stock-bar {
+        transition: width 0.3s ease;
+      }
+      .price-animate {
+        animation: pulse 0.5s ease-in-out;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+      .product-image-section {
+        min-height: 500px;
+      }
+      .toast {
+        animation: slideIn 0.3s ease-out;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <!-- Navbar -->
+    <nav
+      class="fixed top-0 w-full bg-white/95 backdrop-blur-md shadow-lg z-50 transition-all duration-300"
+    >
+      <div class="mx-auto px-0">
+        <div class="flex justify-between items-center py-4">
+          <div class="flex items-center space-x-6 pl-4 md:pl-8">
+            <img
+              src="/images/logo.jpeg"
+              alt="Logo"
+              class="h-24 w-24 object-contain rounded-full shadow-2xl border-4 border-orange-500 ring-4 ring-orange-200"
+              onerror="this.src='https://via.placeholder.com/96?text=ZD';"
+            />
+            <h1
+              class="text-2xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-yellow-600 tracking-wide"
+            >
+              ZIKRIYA DARBAR FOOD PRODUCTS
+            </h1>
+          </div>
+          <div class="hidden md:flex items-center space-x-8 pr-4 md:pr-8">
+            <a
+              href="index.html"
+              class="text-gray-700 hover:text-orange-600 font-medium transition duration-300 text-lg"
+              >Home</a
+            >
+            <a
+              href="/#products"
+              class="text-gray-700 hover:text-orange-600 font-medium transition duration-300 text-lg"
+              >Products</a
+            >
+            <a
+              href="About.html"
+              class="text-gray-700 hover:text-orange-600 font-medium transition duration-300 text-lg"
+              >About Us</a
+            >
+            <a
+              href="contact.html"
+              class="text-gray-700 hover:text-orange-600 font-medium transition duration-300 text-lg"
+              >Contact Us</a
+            >
+            <a
+              href="/admin"
+              class="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition duration-300"
+            >
+              Admin Panel
+            </a>
+          </div>
+          <div class="md:hidden flex items-center space-x-4 pr-4">
+            <button onclick="toggleMobileMenu()" class="p-3">
+              <i class="fas fa-bars text-2xl text-gray-700"></i>
+            </button>
+          </div>
+        </div>
+        <div
+          id="mobileMenu"
+          class="hidden md:hidden absolute top-full left-0 w-full bg-white/98 backdrop-blur-lg shadow-2xl"
+        >
+          <div class="flex flex-col items-center py-8 space-y-6">
+            <a
+              href="/"
+              class="text-xl font-medium text-gray-700 hover:text-orange-600 transition"
+              onclick="toggleMobileMenu()"
+              >Home</a
+            >
+            <a
+              href="/#products"
+              class="text-xl font-medium text-gray-700 hover:text-orange-600 transition"
+              onclick="toggleMobileMenu()"
+              >Products</a
+            >
+            <a
+              href="/about.html"
+              class="text-xl font-medium text-gray-700 hover:text-orange-600 transition"
+              onclick="toggleMobileMenu()"
+              >About Us</a
+            >
+            <a
+              href="/contact.html"
+              class="text-xl font-medium text-gray-700 hover:text-orange-600 transition"
+              onclick="toggleMobileMenu()"
+              >Contact Us</a
+            >
+            <a
+              href="/admin"
+              class="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold px-8 py-4 rounded-full shadow-lg text-xl"
+            >
+              Admin Panel
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-28 pb-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div id="loadingSpinner" class="text-center py-10">
+          <i
+            class="fas fa-spinner loading-spinner text-3xl text-blue-500 mb-2"
+          ></i>
+          <p class="text-gray-600">Loading product details...</p>
+        </div>
+        <div id="productContent" class="hidden grid md:grid-cols-2 gap-8 mb-8">
+          <!-- Carousel -->
+          <div
+            class="product-image-section relative rounded-xl overflow-hidden shadow-xl"
+          >
+            <div
+              id="carousel"
+              class="relative w-full h-full min-h-[500px] rounded-xl"
+            ></div>
+            <div
+              id="thumbsContainer"
+              class="flex justify-center mt-4 space-x-2"
+            ></div>
+            <button
+              onclick="prevSlide()"
+              class="absolute left-2 top-1/2 -translate-y-1/2 bg-white p-2 rounded-full shadow-lg hover:bg-gray-100 z-10"
+            >
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button
+              onclick="nextSlide()"
+              class="absolute right-2 top-1/2 -translate-y-1/2 bg-white p-2 rounded-full shadow-lg hover:bg-gray-100 z-10"
+            >
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <!-- Info -->
+          <div class="space-y-6 flex flex-col justify-center">
+            <h1 id="productName" class="text-3xl font-bold text-gray-800"></h1>
+            <p
+              id="productDescription"
+              class="text-gray-600 leading-relaxed"
+            ></p>
+            <div class="flex items-center space-x-4">
+              <span class="text-yellow-500">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i
+                ><i class="fas fa-star"></i><i class="fas fa-star"></i
+                ><i class="far fa-star"></i> (4.5)
+              </span>
+              <span class="text-gray-500">12 reviews</span>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center space-x-2">
+                <span
+                  id="productPrice"
+                  class="text-3xl font-bold text-green-600 price-animate"
+                ></span>
+                <span
+                  id="productDiscount"
+                  class="text-red-500 line-through text-xl"
+                ></span>
+              </div>
+              <div class="flex items-center space-x-4">
+                <label class="text-sm font-medium text-gray-700">Stock:</label>
+                <div class="w-20 bg-gray-200 rounded-full h-2">
+                  <div
+                    id="stockBar"
+                    class="stock-bar bg-green-500 h-2 rounded-full"
+                  ></div>
+                </div>
+                <span id="productStock" class="text-sm text-gray-500"></span>
+              </div>
+            </div>
+            <div class="flex items-center space-x-4">
+              <label class="text-sm font-medium text-gray-700">Quantity:</label>
+              <button
+                onclick="changeQty(-1)"
+                id="decBtn"
+                class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
+              >
+                -
+              </button>
+              <span id="qtyInput" class="w-8 text-center text-lg font-bold"
+                >1</span
+              >
+              <button
+                onclick="changeQty(1)"
+                id="incBtn"
+                class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
+              >
+                +
+              </button>
+              <span id="stockWarning" class="text-red-500 text-sm hidden"
+                >Max available: <span id="maxStock"></span
+              ></span>
+            </div>
+            <button
+              onclick="buyNow()"
+              class="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition shadow-lg"
+            >
+              <i class="fas fa-bolt mr-2"></i>Buy Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Buy Modal -->
+    <div
+      id="buyModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50"
+    >
+      <div class="bg-white p-6 rounded-xl max-w-md w-full mx-4">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Complete Purchase</h2>
+        <form id="buyForm">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Name</label
+            >
+            <input
+              type="text"
+              id="buyerName"
+              required
+              class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Phone (03XXXXXXXXX)</label
+            >
+            <input
+              type="tel"
+              id="buyerPhone"
+              pattern="03[0-9]{9}"
+              required
+              class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Address</label
+            >
+            <textarea
+              id="buyerAddress"
+              required
+              class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="mb-4">
+            <p class="text-lg font-bold text-green-600">
+              Total: Rs <span id="totalAmount">0</span>
+            </p>
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition"
+          >
+            Place Order <i class="fas fa-arrow-right ml-2"></i>
+          </button>
+        </form>
+        <button
+          onclick="closeBuyModal()"
+          class="mt-4 text-gray-500 hover:text-gray-700 w-full"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <!-- Bill Modal -->
+    <div
+      id="billModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50"
+    >
+      <div class="bg-white p-6 rounded-xl max-w-md w-full mx-4">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Order Confirmed!</h2>
+        <div id="billContent" class="mb-4"></div>
+        <div class="flex space-x-4">
+          <button
+            onclick="printBill()"
+            class="flex-1 bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+          >
+            <i class="fas fa-print mr-2"></i>Print
+          </button>
+          <button
+            onclick="downloadBill()"
+            class="flex-1 bg-green-500 text-white py-2 rounded hover:bg-green-600"
+          >
+            <i class="fas fa-download mr-2"></i>PDF
+          </button>
+        </div>
+        <button
+          onclick="closeBillModal()"
+          class="mt-4 text-gray-500 hover:text-gray-700 w-full"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-20">
+      <div class="max-w-7xl mx-auto px-4">
+        <p class="text-center text-gray-400">
+          &copy; 2025 ZIKRIYA DARBAR FOOD PRODUCTS. Made with ❤️ in Pakistan
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      let currentProduct = {};
+      let currentSlide = 0;
+      let qty = 1;
+
+      function toggleMobileMenu() {
+        document.getElementById("mobileMenu").classList.toggle("hidden");
+      }
+
+      async function loadProduct() {
+        const id = new URLSearchParams(window.location.search).get("id");
+        if (!id) return showError("Product ID missing");
+
+        try {
+          const res = await fetch(`${API_BASE}/api/products/${id}`);
+          if (!res.ok) throw new Error("Product not found");
+          currentProduct = await res.json();
+          displayProduct();
+          document.getElementById("loadingSpinner").classList.add("hidden");
+          document.getElementById("productContent").classList.remove("hidden");
+        } catch (err) {
+          showError("Error loading product");
+        }
+      }
+
+      function showError(msg) {
+        document.getElementById(
+          "loadingSpinner"
+        ).innerHTML = `<p class="text-red-500">${msg}</p>`;
+      }
+
+      function displayProduct() {
+        document.getElementById("productName").textContent =
+          currentProduct.name || "N/A";
+        document.getElementById("productDescription").innerHTML =
+          currentProduct.description
+            ? currentProduct.description.replace(/\n/g, "<br>")
+            : "No description";
+
+        const price = currentProduct.price || 0;
+        const discount = currentProduct.discount || 0;
+        const discountedPrice = price * (1 - discount / 100);
+
+        document.getElementById(
+          "productPrice"
+        ).textContent = `Rs ${discountedPrice.toFixed(0)}`;
+        document.getElementById("productDiscount").textContent =
+          discount > 0 ? `Rs ${price.toFixed(0)}` : "";
+
+        const stock = currentProduct.stock || 0;
+        const stockPercent = stock > 0 ? Math.min((stock / 100) * 100, 100) : 0;
+        document.getElementById("stockBar").style.width = stockPercent + "%";
+        document.getElementById("productStock").textContent =
+          stock > 0 ? "In Stock" : "Out of Stock";
+        document.getElementById("maxStock").textContent = stock;
+
+        loadCarousel();
+        updateQtyButtons();
+      }
+
+      function loadCarousel() {
+        const images =
+          currentProduct.images && currentProduct.images.length > 0
+            ? currentProduct.images.map((img) => `${API_BASE}${img}`)
+            : ["https://via.placeholder.com/600?text=No+Image"];
+        const carousel = document.getElementById("carousel");
+        const thumbs = document.getElementById("thumbsContainer");
+
+        carousel.innerHTML = images
+          .map(
+            (img, i) => `
+          <img src="${img}" alt="Product" class="carousel-img w-full h-full object-cover absolute inset-0" style="display: ${
+              i === 0 ? "block" : "none"
+            }">
+        `
+          )
+          .join("");
+
+        thumbs.innerHTML = images
+          .map(
+            (img, i) => `
+          <img src="${img}" onclick="goToSlide(${i})" class="w-16 h-16 object-cover rounded cursor-pointer border-2 ${
+              i === 0 ? "border-blue-500" : "border-gray-200"
+            }">
+        `
+          )
+          .join("");
+      }
+
+      function goToSlide(index) {
+        document
+          .querySelectorAll("#carousel img")
+          .forEach(
+            (img, i) => (img.style.display = i === index ? "block" : "none")
+          );
+        document
+          .querySelectorAll("#thumbsContainer img")
+          .forEach((thumb, i) => {
+            thumb.classList.toggle("border-blue-500", i === index);
+            thumb.classList.toggle("border-gray-200", i !== index);
+          });
+        currentSlide = index;
+      }
+
+      function prevSlide() {
+        const len = currentProduct.images ? currentProduct.images.length : 1;
+        goToSlide((currentSlide - 1 + len) % len);
+      }
+
+      function nextSlide() {
+        const len = currentProduct.images ? currentProduct.images.length : 1;
+        goToSlide((currentSlide + 1) % len);
+      }
+
+      function changeQty(change) {
+        const newQty = qty + change;
+        if (newQty < 1 || newQty > currentProduct.stock) return;
+        qty = newQty;
+        document.getElementById("qtyInput").textContent = qty;
+        updateQtyButtons();
+      }
+
+      function updateQtyButtons() {
+        document.getElementById("incBtn").disabled =
+          qty >= currentProduct.stock;
+        document.getElementById("decBtn").disabled = qty <= 1;
+        document
+          .getElementById("stockWarning")
+          .classList.toggle("hidden", qty < currentProduct.stock);
+      }
+
+      // Buy Now - Clean total (no extra charges)
+      function buyNow() {
+        if (qty > currentProduct.stock) {
+          alert("Insufficient stock!");
+          return;
+        }
+
+        const finalPrice =
+          currentProduct.price * (1 - currentProduct.discount / 100) * qty;
+        document.getElementById("totalAmount").textContent =
+          finalPrice.toFixed(0);
+        document.getElementById("buyModal").classList.remove("hidden");
+      }
+
+      function closeBuyModal() {
+        document.getElementById("buyModal").classList.add("hidden");
+        document.getElementById("buyForm").reset();
+      }
+
+      // Place Order - No delivery or GST charges
+      document
+        .getElementById("buyForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const buyer = {
+            name: document.getElementById("buyerName").value.trim(),
+            phone: document.getElementById("buyerPhone").value.trim(),
+            address: document.getElementById("buyerAddress").value.trim(),
+          };
+
+          if (!buyer.name || !buyer.phone || !buyer.address) {
+            alert("Please fill all fields");
+            return;
+          }
+
+          const subtotal =
+            currentProduct.price * (1 - currentProduct.discount / 100) * qty;
+          const total = subtotal; // Only product price
+
+          try {
+            const res = await fetch(`${API_BASE}/api/orders`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                productId: currentProduct._id,
+                buyer,
+                qty,
+                subtotal,
+                gst: 0,
+                delivery: 0,
+                total,
+              }),
+            });
+
+            if (!res.ok) throw new Error("Order failed");
+
+            const data = await res.json();
+            const order = data.order || data;
+
+            closeBuyModal();
+
+            // Show confirmation alert
+            alert(
+              "✅ Order Confirmed!\n\nOrder ID: #" +
+                (order._id ? order._id.slice(-6) : "N/A") +
+                "\n\nYour order has been placed successfully. You will receive it within 2-3 days."
+            );
+
+            showBill(order, total);
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 },
+            });
+          } catch (err) {
+            alert("❌ Order failed: " + err.message);
+          }
+        });
+
+      function showBill(order, totalAmount) {
+        const date = new Date().toLocaleDateString("en-PK");
+        const buyerInfo = order.buyer || {};
+        const billHtml = `
+          <p><strong>Order Confirmation</strong></p>
+          <p>ID: #${order._id ? order._id.slice(-6) : "N/A"}</p>
+          <p>Date: ${date}</p>
+          <table class="w-full mb-4">
+            <tr><td class="p-2">Product</td><td class="p-2 text-right">${
+              currentProduct.name
+            }</td></tr>
+            <tr><td class="p-2">Qty</td><td class="p-2 text-right">${qty}</td></tr>
+            <tr><td class="p-2 font-bold">Total</td><td class="p-2 text-right text-green-600">Rs ${totalAmount.toFixed(
+              0
+            )}</td></tr>
+          </table>
+          <div class="text-sm text-gray-600">
+            <p><strong>Buyer Details:</strong></p>
+            <p>Name: ${buyerInfo.name || "N/A"}</p>
+            <p>Phone: ${buyerInfo.phone || "N/A"}</p>
+            <p>Address: ${buyerInfo.address || "N/A"}</p>
+            <p style="margin-top: 10px;"><strong>Status:</strong> Pending</p>
+            <p><strong>Delivery:</strong> 2-3 days</p>
+          </div>
+        `;
+        document.getElementById("billContent").innerHTML = billHtml;
+        document.getElementById("billModal").classList.remove("hidden");
+      }
+
+      function closeBillModal() {
+        document.getElementById("billModal").classList.add("hidden");
+      }
+
+      function printBill() {
+        window.print();
+      }
+
+      function downloadBill() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.html(document.getElementById("billContent").innerHTML, {
+          callback: (doc) => doc.save("bill.pdf"),
+          x: 10,
+          y: 10,
+        });
+      }
+
+      loadProduct();
+    </script>
+  </body>
+</html>

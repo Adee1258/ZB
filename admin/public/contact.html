@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact Us - ZIKRIYA DARBAR FOOD PRODUCTS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: { extend: { fontFamily: { sans: ["Poppins", "sans-serif"] } } },
+      };
+    </script>
+    <style>
+      .hero-contact {
+        background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+          url("https://images.unsplash.com/photo-1576618148400-f54bed99fcfd?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80");
+        background-size: cover;
+        background-position: center;
+      }
+      .contact-icon {
+        transition: all 0.3s ease;
+      }
+      .contact-icon:hover {
+        transform: translateY(-5px) scale(1.1);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <!-- NAVBAR -->
+    <nav
+      class="fixed top-0 w-full bg-white/95 backdrop-blur-md shadow-lg z-50 transition-all duration-300"
+    >
+      <div class="mx-auto px-0">
+        <div class="flex justify-between items-center py-4">
+          <!-- Left: Logo + Name -->
+          <div class="flex items-center space-x-6 pl-4 md:pl-8">
+            <img
+              src="/images/logo.jpeg"
+              alt="ZIKRIYA DARBAR FOOD PRODUCTS Logo"
+              class="h-24 w-24 object-contain rounded-full shadow-2xl border-4 border-orange-500 ring-4 ring-orange-200"
+              onerror="this.src='https://via.placeholder.com/96?text=ZD';"
+            />
+            <h1
+              class="text-2xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-yellow-600 tracking-wide"
+            >
+              ZIKRIYA DARBAR FOOD PRODUCTS
+            </h1>
+          </div>
+
+          <!-- Right: Menu Links -->
+          <div class="hidden md:flex items-center space-x-8 pr-4 md:pr-8">
+            <a
+              href="index.html"
+              class="text-gray-700 hover:text-orange-600 font-medium transition duration-300 text-lg"
+              >Home</a
+            >
+            <a
+              href="#products"
+              class="text-gray-700 hover:text-orange-600 font-medium transition duration-300 text-lg"
+              >Products</a
+            >
+            <a
+              href="About.html"
+              class="text-gray-700 hover:text-orange-600 font-medium transition duration-300 text-lg"
+              >About Us</a
+            >
+            <a
+              href="contact.html"
+              class="text-gray-700 hover:text-orange-600 font-medium transition duration-300 text-lg"
+              >Contact Us</a
+            >
+            <a
+              href="/admin"
+              class="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold px-6 py-3 rounded-full shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-red-700 transition duration-300"
+            >
+              Admin Panel
+            </a>
+          </div>
+
+          <!-- Mobile Menu Button -->
+          <div class="md:hidden flex items-center space-x-4 pr-4">
+            <button onclick="toggleMobileMenu()" class="p-3">
+              <i class="fas fa-bars text-2xl text-gray-700"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div
+          id="mobileMenu"
+          class="hidden md:hidden absolute top-full left-0 w-full bg-white/98 backdrop-blur-lg shadow-2xl"
+        >
+          <div class="flex flex-col items-center py-8 space-y-6">
+            <a
+              href="index.html"
+              class="text-xl font-medium text-gray-700 hover:text-orange-600 transition"
+              onclick="toggleMobileMenu()"
+              >Home</a
+            >
+            <a
+              href="#products"
+              class="text-xl font-medium text-gray-700 hover:text-orange-600 transition"
+              onclick="toggleMobileMenu()"
+              >Products</a
+            >
+            <a
+              href="About.html"
+              class="text-xl font-medium text-gray-700 hover:text-orange-600 transition"
+              onclick="toggleMobileMenu()"
+              >About Us</a
+            >
+            <a
+              href="contact.html"
+              class="text-xl font-medium text-gray-700 hover:text-orange-600 transition"
+              onclick="toggleMobileMenu()"
+              >Contact Us</a
+            >
+            <a
+              href="/admin"
+              class="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold px-8 py-4 rounded-full shadow-lg text-xl"
+            >
+              Admin Panel
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section
+      class="hero-contact h-96 flex items-center justify-center text-center text-white pt-20"
+    >
+      <div>
+        <h1 class="text-5xl md:text-7xl font-bold mb-4">
+          Get in <span class="text-orange-400">Touch</span>
+        </h1>
+        <p class="text-2xl">We're here to help with orders & inquiries</p>
+      </div>
+    </section>
+
+    <!-- Main Contact Section -->
+    <section class="py-20 bg-white">
+      <div class="container mx-auto px-6 max-w-6xl">
+        <div class="grid md:grid-cols-2 gap-12">
+          <!-- Contact Form -->
+          <div
+            class="bg-gradient-to-br from-orange-50 to-red-50 p-10 rounded-3xl shadow-2xl"
+          >
+            <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">
+              Send Message
+            </h2>
+            <form id="contactForm" class="space-y-6">
+              <input
+                type="text"
+                id="name"
+                required
+                placeholder="Your Name"
+                class="w-full p-4 rounded-xl border-2 border-orange-200 focus:border-orange-500 transition"
+              />
+              <input
+                type="tel"
+                id="phone"
+                required
+                placeholder="Phone Number"
+                class="w-full p-4 rounded-xl border-2 border-orange-200 focus:border-orange-500 transition"
+              />
+              <input
+                type="email"
+                id="email"
+                placeholder="Email (Optional)"
+                class="w-full p-4 rounded-xl border-2 border-orange-200 focus:border-orange-500 transition"
+              />
+              <textarea
+                id="message"
+                rows="6"
+                required
+                placeholder="Your Message / Order Inquiry"
+                class="w-full p-4 rounded-xl border-2 border-orange-200 focus:border-orange-500 transition resize-none"
+              ></textarea>
+              <button
+                type="submit"
+                class="w-full bg-gradient-to-r from-red-600 to-orange-600 text-white py-5 rounded-xl text-xl font-bold hover:from-red-700 hover:to-orange-700 transition shadow-xl"
+              >
+                Send Message <i class="fas fa-paper-plane ml-3"></i>
+              </button>
+            </form>
+          </div>
+
+          <!-- Quick Contact + Address + Map -->
+          <div class="space-y-10">
+            <h2 class="text-4xl font-bold text-gray-800 mb-8">Quick Contact</h2>
+            <div class="space-y-8">
+              <!-- WhatsApp -->
+              <a
+                href="https://wa.me/923327372364"
+                target="_blank"
+                class="flex items-center space-x-6 contact-icon"
+              >
+                <div class="bg-green-100 p-6 rounded-full">
+                  <i class="fab fa-whatsapp text-5xl text-green-600"></i>
+                </div>
+                <div>
+                  <p class="text-2xl font-bold">WhatsApp</p>
+                  <p class="text-xl text-gray-600">+92 332 7372364</p>
+                  <p class="text-green-600 font-medium">Click to Chat</p>
+                </div>
+              </a>
+
+              <!-- Call -->
+              <a
+                href="tel:+923327372364"
+                class="flex items-center space-x-6 contact-icon"
+              >
+                <div class="bg-blue-100 p-6 rounded-full">
+                  <i class="fas fa-phone-alt text-5xl text-blue-600"></i>
+                </div>
+                <div>
+                  <p class="text-2xl font-bold">Call Us</p>
+                  <p class="text-xl text-gray-600">+92 332 7372364</p>
+                  <p class="text-blue-600 font-medium">Direct Call</p>
+                </div>
+              </a>
+
+              <!-- Email -->
+              <a
+                href="mailto:zdspices@gmail.com"
+                class="flex items-center space-x-6 contact-icon"
+              >
+                <div class="bg-red-100 p-6 rounded-full">
+                  <i class="fas fa-envelope text-5xl text-red-600"></i>
+                </div>
+                <div>
+                  <p class="text-2xl font-bold">Email</p>
+                  <p class="text-xl text-gray-600">zdspices@gmail.com</p>
+                  <p class="text-red-600 font-medium">Send Email</p>
+                </div>
+              </a>
+            </div>
+
+            <!-- Physical Address Box -->
+            <div
+              class="mt-12 bg-gradient-to-br from-orange-100 to-red-100 p-8 rounded-2xl shadow-xl border-2 border-orange-300 contact-icon"
+            >
+              <div class="flex items-start space-x-6">
+                <div class="bg-orange-500 p-5 rounded-full flex-shrink-0">
+                  <i class="fas fa-map-marker-alt text-4xl text-white"></i>
+                </div>
+                <div>
+                  <p class="text-2xl font-bold text-gray-800 mb-3">Visit Us</p>
+                  <p class="text-lg text-gray-700 leading-relaxed">
+                    Opposite,<br />
+                    Masjid Al-Firdos,<br />
+                    Near SM Foods,<br />
+                    New Central Jail Road,<br />
+                    Multan, Punjab,<br />
+                    Pakistan
+                  </p>
+                  <p class="text-sm text-orange-700 font-medium mt-4">
+                    Coordinates: 30°09'55.3"N 71°28'31.3"E
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Updated Map -->
+            <div
+              class="mt-12 w-full h-96 rounded-xl overflow-hidden shadow-2xl border-4 border-orange-300"
+            >
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3457.567890123456!2d71.475361!3d30.165361!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzDCsDA5JzU1LjMiTiA3McKwMjgnMzEuMyJF!5e0!3m2!1sen!2spk!4v1734567890123!5m2!1sen!2spk"
+                width="100%"
+                height="100%"
+                style="border: 0"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                title="Zikriya Darbar Food Products - Multan Location"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-4 gap-8">
+          <div>
+            <h3 class="text-lg font-bold mb-4">ZIKRIYA DARBAR FOOD PRODUCTS</h3>
+            <p class="text-gray-400">
+              Premium spices & fish for B2B. Fresh, authentic, delivered fast.
+            </p>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+            <ul class="space-y-2 text-gray-400">
+              <li><a href="/" class="hover:text-white transition">Home</a></li>
+              <li>
+                <a
+                  href="/index.html#products"
+                  class="hover:text-white transition"
+                  >Products</a
+                >
+              </li>
+              <li>
+                <a href="/about.html" class="hover:text-white transition"
+                  >About Us</a
+                >
+              </li>
+              <li>
+                <a href="/admin" class="hover:text-white transition">Admin</a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Support</h4>
+            <ul class="space-y-2 text-gray-400">
+              <li><a href="#" class="hover:text-white transition">FAQ</a></li>
+              <li>
+                <a href="#" class="hover:text-white transition">Shipping</a>
+              </li>
+              <li>
+                <a href="#" class="hover:text-white transition">Returns</a>
+              </li>
+              <li>
+                <a href="#" class="hover:text-white transition"
+                  >Privacy Policy</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Follow Us</h4>
+            <div class="flex space-x-4">
+              <a href="#" class="text-gray-400 hover:text-white transition"
+                ><i class="fab fa-facebook-f text-xl"></i
+              ></a>
+              <a href="#" class="text-gray-400 hover:text-white transition"
+                ><i class="fab fa-instagram text-xl"></i
+              ></a>
+              <a href="#" class="text-gray-400 hover:text-white transition"
+                ><i class="fab fa-twitter text-xl"></i
+              ></a>
+            </div>
+          </div>
+        </div>
+        <div
+          class="border-t border-gray-700 mt-8 pt-4 text-center text-gray-400"
+        >
+          <p>
+            &copy; 2025 ZIKRIYA DARBAR FOOD PRODUCTS. All rights reserved. |
+            Made with ❤️ in Pakistan
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      function toggleMobileMenu() {
+        document.getElementById("mobileMenu").classList.toggle("hidden");
+      }
+
+      // Form Submit
+      document
+        .getElementById("contactForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const name = document.getElementById("name").value;
+          const phone = document.getElementById("phone").value;
+          const email = document.getElementById("email").value;
+          const message = document.getElementById("message").value;
+
+          try {
+            const res = await fetch("/api/contact", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name, phone, email, message }),
+            });
+            const data = await res.json();
+            alert(data.msg || "Message sent successfully!");
+            e.target.reset();
+          } catch (err) {
+            alert("Error sending message. Try WhatsApp or Call.");
+          }
+        });
+    </script>
+  </body>
+</html>

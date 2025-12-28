@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add/Edit Product - ZIKRIYA DARBAR FOOD PRODUCTS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"
+    />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: { extend: { fontFamily: { sans: ["Poppins", "sans-serif"] } } },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+      }
+      .sidebar {
+        background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+        height: 100vh;
+        overflow-y: auto;
+      }
+      .step-indicator {
+        transition: all 0.3s ease;
+      }
+      .step-indicator.active {
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+        transform: scale(1.1);
+      }
+      .error-shake {
+        animation: shake 0.5s ease-in-out;
+      }
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-5px);
+        }
+        75% {
+          transform: translateX(5px);
+        }
+      }
+      .loading-spinner {
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .tag-chip {
+        transition: all 0.2s ease;
+      }
+      .tag-chip:hover {
+        transform: scale(1.05);
+      }
+      .preview-card {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+      }
+      .preview-card:hover {
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      }
+      .toast {
+        animation: slideIn 0.3s ease;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-700 min-h-screen flex"
+  >
+    <!-- Static Sidebar -->
+    <div
+      class="sidebar text-white flex flex-col z-50 md:flex-shrink-0 w-64 fixed md:relative h-screen overflow-y-auto transition-transform duration-300 -translate-x-full md:translate-x-0"
+      id="sidebar"
+    >
+      <div class="p-4 border-b border-blue-400 flex-shrink-0">
+        <h1 class="text-2xl font-bold">Admin Panel</h1>
+        <p class="text-sm opacity-90">Professional Dashboard</p>
+      </div>
+
+      <!-- Admin Profile Section in Sidebar -->
+      <div class="p-4 border-b border-blue-300 bg-blue-600 bg-opacity-50">
+        <div class="text-center">
+          <img
+            id="sidebarAdminDP"
+            src="/admin-dp/logo.jpeg"
+            alt="Admin"
+            class="w-16 h-16 rounded-full mx-auto mb-2 border-2 border-white object-cover"
+            onerror="this.onerror=null;this.src='/admin-dp/logo.jpeg';"
+          />
+          <p id="sidebarAdminName" class="font-semibold text-white">Admin</p>
+          <p class="text-xs text-blue-100">Administrator</p>
+        </div>
+      </div>
+
+      <nav class="flex-1 p-4 overflow-y-auto">
+        <ul class="space-y-2">
+          <li>
+            <a
+              href="/admin/dashboard.html"
+              class="flex items-center p-3 rounded-lg hover:bg-blue-500 transition"
+              ><i class="fas fa-tachometer-alt mr-3"></i> Dashboard</a
+            >
+          </li>
+          <li>
+            <a
+              href="/admin/add-product.html"
+              class="flex items-center p-3 rounded-lg hover:bg-blue-500 transition"
+              ><i class="fas fa-plus mr-3"></i> Add Product</a
+            >
+          </li>
+          <li>
+            <a
+              href="/admin/analytics.html"
+              class="flex items-center p-3 rounded-lg hover:bg-blue-500 transition"
+              ><i class="fas fa-chart-bar mr-3"></i> Analytics</a
+            >
+          </li>
+          <li>
+            <a
+              href="/"
+              class="flex items-center p-3 rounded-lg hover:bg-blue-500 transition"
+              ><i class="fas fa-home mr-3"></i> Return to Website</a
+            >
+          </li>
+          <li>
+            <button
+              onclick="logout()"
+              class="flex items-center p-3 rounded-lg hover:bg-red-500 transition w-full text-left"
+            >
+              <i class="fas fa-sign-out-alt mr-3"></i> Logout
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 md:ml-64 p-6 min-h-screen">
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1
+            class="text-4xl font-bold text-gray-800 dark:text-white"
+            id="formTitle"
+          >
+            Add Product
+          </h1>
+          <p class="text-gray-600 dark:text-gray-300 mt-1">
+            Fill in the details to add a new product to your inventory. All
+            fields are required.
+          </p>
+        </div>
+        <button
+          onclick="toggleSidebar()"
+          class="md:hidden p-3 bg-blue-500 text-white rounded-xl shadow-lg hover:shadow-xl transition"
+        >
+          <i class="fas fa-bars text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="mb-8">
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+          <div
+            class="form-progress bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-500 ease-out"
+            id="progressBar"
+            style="width: 0%"
+          ></div>
+        </div>
+        <p
+          class="text-sm text-gray-500 dark:text-gray-400 text-right mt-2"
+          id="progressText"
+        >
+          0% Complete
+        </p>
+      </div>
+
+      <div
+        class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl max-w-4xl mx-auto border border-gray-200 dark:border-gray-700 form-card"
+      >
+        <form id="productForm" enctype="multipart/form-data">
+          <div class="flex justify-center mb-8">
+            <div class="flex space-x-2">
+              <div
+                class="step-indicator w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-sm font-semibold transition-all duration-300"
+                data-step="1"
+              >
+                1
+              </div>
+              <div
+                class="step-indicator w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-sm font-semibold transition-all duration-300"
+                data-step="2"
+              >
+                2
+              </div>
+              <div
+                class="step-indicator w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-sm font-semibold transition-all duration-300"
+                data-step="3"
+              >
+                3
+              </div>
+              <div
+                class="step-indicator w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-sm font-semibold transition-all duration-300"
+                data-step="4"
+              >
+                4
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 1: Basic Info -->
+          <div id="step1" class="step-content">
+            <div class="mb-6">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >Product Name <span class="text-red-500">*</span></label
+              >
+              <input
+                type="text"
+                id="name"
+                placeholder="e.g., Haldi Powder (500g)"
+                required
+                class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                list="nameSuggestions"
+                oninput="updateProgress(); validateField('name')"
+              />
+              <datalist id="nameSuggestions">
+                <option value="Haldi Powder (500g)"></option>
+                <option value="Mirch Powder (250g)"></option>
+                <option value="Fresh Machhli (1kg)"></option>
+                <option value="Garam Masala (100g)"></option>
+              </datalist>
+              <p
+                id="nameError"
+                class="text-red-500 text-sm hidden mt-1 error-shake"
+              >
+                Name is required and must be unique (min 3 chars)
+              </p>
+            </div>
+            <div class="mb-6">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >Description <span class="text-red-500">*</span></label
+              >
+              <textarea
+                id="description"
+                placeholder="Brief description of the product..."
+                required
+                rows="4"
+                class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                oninput="updateProgress(); validateField('description')"
+              ></textarea>
+              <p
+                id="descriptionError"
+                class="text-red-500 text-sm hidden mt-1 error-shake"
+              >
+                Description is required (min 10 chars)
+              </p>
+            </div>
+            <button
+              type="button"
+              onclick="nextStep(1)"
+              class="bg-blue-500 hover:bg-blue-600 text-white py-3 px-8 rounded-xl transition font-semibold shadow-lg ml-auto block"
+            >
+              Next: Pricing & Stock <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+          </div>
+
+          <!-- Step 2: Pricing & Stock -->
+          <div id="step2" class="step-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >Price (Rs) <span class="text-red-500">*</span></label
+                >
+                <input
+                  type="number"
+                  id="price"
+                  placeholder="100.00"
+                  min="0"
+                  step="0.01"
+                  required
+                  class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  oninput="updateProgress(); validateField('price'); calculateDiscount()"
+                />
+                <p
+                  id="priceError"
+                  class="text-red-500 text-sm hidden mt-1 error-shake"
+                >
+                  Price must be positive
+                </p>
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >Discount (%)
+                  <span class="text-gray-500">(Optional)</span></label
+                >
+                <input
+                  type="number"
+                  id="discount"
+                  placeholder="0"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  oninput="calculateDiscount()"
+                />
+                <p
+                  id="discountedPrice"
+                  class="text-green-600 font-semibold mt-1 hidden"
+                >
+                  Discounted: Rs <span id="discPriceValue">0</span>
+                </p>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >Stock Quantity <span class="text-red-500">*</span></label
+                >
+                <input
+                  type="number"
+                  id="stock"
+                  placeholder="50"
+                  min="0"
+                  required
+                  class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  oninput="updateProgress(); validateField('stock')"
+                />
+                <p
+                  id="stockError"
+                  class="text-red-500 text-sm hidden mt-1 error-shake"
+                >
+                  Stock must be non-negative
+                </p>
+              </div>
+            </div>
+            <div class="flex justify-between">
+              <button
+                type="button"
+                onclick="prevStep(2)"
+                class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-8 rounded-xl transition font-semibold shadow-lg"
+              >
+                <i class="fas fa-arrow-left mr-2"></i> Previous
+              </button>
+              <button
+                type="button"
+                onclick="nextStep(2)"
+                class="bg-blue-500 hover:bg-blue-600 text-white py-3 px-8 rounded-xl transition font-semibold shadow-lg"
+              >
+                Next: Category & Tags <i class="fas fa-arrow-right ml-2"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 3: Category & Tags -->
+          <div id="step3" class="step-content hidden">
+            <div class="mb-6">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >Category <span class="text-red-500">*</span></label
+              >
+              <select
+                id="category"
+                required
+                class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                oninput="updateProgress()"
+              >
+                <option value="">Select Category</option>
+                <option value="Masala">Masala</option>
+                <option value="Powder">Powder</option>
+                <option value="Fresh">Fresh</option>
+                <option value="Dry Fruits">Dry Fruits</option>
+              </select>
+            </div>
+            <div class="mb-6">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >Tags (Press Enter after each)</label
+              >
+              <input
+                type="text"
+                id="tagInput"
+                placeholder="e.g., spicy, premium, organic"
+                class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                onkeydown="addTag(event)"
+              />
+              <div id="tagsContainer" class="mt-3"></div>
+            </div>
+            <div class="flex justify-between">
+              <button
+                type="button"
+                onclick="prevStep(3)"
+                class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-8 rounded-xl transition font-semibold shadow-lg"
+              >
+                <i class="fas fa-arrow-left mr-2"></i> Previous
+              </button>
+              <button
+                type="button"
+                onclick="nextStep(3)"
+                class="bg-blue-500 hover:bg-blue-600 text-white py-3 px-8 rounded-xl transition font-semibold shadow-lg"
+              >
+                Next: Images <i class="fas fa-arrow-right ml-2"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 4: Images & Preview -->
+          <div id="step4" class="step-content hidden">
+            <div class="mb-6">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >Product Images (Max 5)
+                <span class="text-red-500">*</span></label
+              >
+              <input
+                type="file"
+                id="image"
+                accept="image/*"
+                multiple
+                class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+              <div
+                id="imageGallery"
+                class="grid grid-cols-3 md:grid-cols-5 gap-4 mt-4 hidden"
+              ></div>
+            </div>
+
+            <!-- Preview Card -->
+            <div
+              class="preview-card bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 mb-8"
+            >
+              <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">
+                Live Preview
+              </h3>
+              <div class="flex flex-col md:flex-row gap-6">
+                <div
+                  class="w-32 h-32 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center"
+                >
+                  <i class="fas fa-image text-4xl text-gray-400"></i>
+                </div>
+                <div class="flex-1">
+                  <h4
+                    class="text-2xl font-bold text-gray-800 dark:text-white"
+                    id="previewName"
+                  >
+                    Product Name
+                  </h4>
+                  <p
+                    class="text-gray-600 dark:text-gray-400 mt-1"
+                    id="previewDescription"
+                  >
+                    Description here
+                  </p>
+                  <p
+                    class="text-3xl font-bold text-green-600 mt-2"
+                    id="previewPrice"
+                  >
+                    Rs 0.00
+                  </p>
+                  <p
+                    class="text-lg text-gray-600 dark:text-gray-400"
+                    id="previewDiscount"
+                  >
+                    No discount
+                  </p>
+                  <p class="text-sm text-gray-500 mt-2" id="previewStock">
+                    Stock: 0
+                  </p>
+                  <div class="mt-3" id="previewTags">No tags</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-between">
+              <button
+                type="button"
+                onclick="prevStep(4)"
+                class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-8 rounded-xl transition font-semibold shadow-lg"
+              >
+                <i class="fas fa-arrow-left mr-2"></i> Previous
+              </button>
+              <button
+                type="submit"
+                id="submitBtn"
+                class="bg-green-500 hover:bg-green-600 text-white py-3 px-8 rounded-xl transition font-semibold shadow-lg"
+              >
+                Save Product <i class="fas fa-save ml-2"></i>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // ==================== MAIN FIX: API BASE URL ====================
+      const API_BASE = "http://localhost:5000";
+
+      let editId = null;
+      let editingProduct = null;
+      let token = localStorage.getItem("adminToken");
+      let tags = [];
+      let galleryImages = [];
+
+      // Load Admin Profile
+      async function loadAdminProfile() {
+        const token = localStorage.getItem("adminToken");
+
+        if (!token) return;
+
+        try {
+          const res = await fetch(`${API_BASE}/api/admin/profile`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!res.ok) return;
+
+          const data = await res.json();
+          console.log("Admin profile data:", data);
+
+          // Update sidebar name
+          if (data.username) {
+            const sidebarName = document.getElementById("sidebarAdminName");
+            if (sidebarName) sidebarName.textContent = data.username;
+          }
+
+          // Update sidebar DP - SIMPLE
+          let dpUrl = "/images/logo.jpeg";
+
+          if (data.dp) {
+            if (data.dp.includes("/uploads") || data.dp.includes("admin-dp")) {
+              dpUrl = `${API_BASE}${data.dp}`;
+            } else {
+              dpUrl = `${API_BASE}/uploads/admin-dp/${data.dp}`;
+            }
+          }
+
+          console.log("Sidebar DP URL:", dpUrl);
+
+          const sidebarImg = document.getElementById("sidebarAdminDP");
+          if (sidebarImg) {
+            sidebarImg.src = dpUrl;
+            sidebarImg.onerror = () => {
+              sidebarImg.src = "/images/logo.jpeg";
+            };
+          }
+        } catch (error) {
+          console.error("Error loading admin profile:", error);
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        loadAdminProfile();
+      });
+
+      // Progress & Steps
+      function nextStep(current) {
+        if (!validateStep(current)) return;
+        document.getElementById(`step${current}`).classList.add("hidden");
+        document
+          .getElementById(`step${current + 1}`)
+          .classList.remove("hidden");
+        document
+          .querySelector(`[data-step="${current + 1}"]`)
+          .classList.add("active");
+      }
+
+      function prevStep(current) {
+        document.getElementById(`step${current}`).classList.add("hidden");
+        document
+          .getElementById(`step${current - 1}`)
+          .classList.remove("hidden");
+        document
+          .querySelector(`[data-step="${current}"]`)
+          .classList.remove("active");
+      }
+
+      function validateStep(step) {
+        let isValid = true;
+        if (step === 1) {
+          if (!document.getElementById("name").value.trim()) {
+            shakeField("name");
+            isValid = false;
+          }
+          if (!document.getElementById("description").value.trim()) {
+            shakeField("description");
+            isValid = false;
+          }
+        } else if (step === 2) {
+          const price = parseFloat(document.getElementById("price").value);
+          const stock = parseInt(document.getElementById("stock").value);
+          if (isNaN(price) || price <= 0) {
+            shakeField("price");
+            isValid = false;
+          }
+          if (isNaN(stock) || stock < 0) {
+            shakeField("stock");
+            isValid = false;
+          }
+        } else if (step === 3) {
+          if (!document.getElementById("category").value) {
+            shakeField("category");
+            isValid = false;
+          }
+        } else if (step === 4) {
+          let hasImages = galleryImages.length > 0;
+          if (
+            editId &&
+            editingProduct &&
+            editingProduct.images &&
+            editingProduct.images.length > 0
+          )
+            hasImages = true;
+          if (!hasImages) {
+            shakeField("image");
+            isValid = false;
+          }
+        }
+        return isValid;
+      }
+
+      function shakeField(fieldId) {
+        const field = document.getElementById(fieldId);
+        field.classList.add("error-shake");
+        setTimeout(() => field.classList.remove("error-shake"), 500);
+      }
+
+      function updateProgress() {
+        const fields = ["name", "description", "price", "stock", "category"];
+        let complete = 0;
+        fields.forEach((field) => {
+          if (document.getElementById(field).value.trim()) complete++;
+        });
+        const percent = (complete / 5) * 100;
+        document.getElementById("progressBar").style.width = percent + "%";
+        document.getElementById("progressText").textContent =
+          Math.round(percent) + "% Complete";
+      }
+
+      function addTag(e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const tag = e.target.value.trim();
+          if (tag && !tags.includes(tag)) {
+            tags.push(tag);
+            e.target.value = "";
+            updateTagsDisplay();
+            updatePreview();
+          }
+        }
+      }
+
+      function updateTagsDisplay() {
+        const container = document.getElementById("tagsContainer");
+        container.innerHTML = tags
+          .map(
+            (tag) => `
+          <span class="tag-chip inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium mr-2 mb-2">
+            ${tag}
+            <button type="button" onclick="removeTag('${tag}')" class="ml-2 text-blue-500 hover:text-blue-700"><i class="fas fa-times"></i></button>
+          </span>
+        `
+          )
+          .join("");
+      }
+
+      function removeTag(tag) {
+        tags = tags.filter((t) => t !== tag);
+        updateTagsDisplay();
+        updatePreview();
+      }
+
+      function updatePreview() {
+        document.getElementById("previewName").textContent =
+          document.getElementById("name").value || "Product Name";
+        document.getElementById("previewDescription").textContent =
+          document.getElementById("description").value || "Description here";
+        const price = parseFloat(document.getElementById("price").value) || 0;
+        const discount =
+          parseFloat(document.getElementById("discount").value) || 0;
+        const discounted = price - (price * discount) / 100;
+        document.getElementById("previewPrice").textContent =
+          "Rs " + price.toFixed(2);
+        document.getElementById("previewDiscount").textContent =
+          discount > 0
+            ? "Discounted: Rs " + discounted.toFixed(2)
+            : "No discount";
+        document.getElementById("previewStock").textContent =
+          "Stock: " + (document.getElementById("stock").value || 0);
+        document.getElementById("previewTags").innerHTML =
+          tags
+            .map(
+              (tag) =>
+                `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs mr-1">${tag}</span>`
+            )
+            .join("") || "No tags";
+      }
+
+      function calculateDiscount() {
+        const price = parseFloat(document.getElementById("price").value) || 0;
+        const discount =
+          parseFloat(document.getElementById("discount").value) || 0;
+        const discounted = price - (price * discount) / 100;
+        if (discount > 0) {
+          document.getElementById("discountedPrice").classList.remove("hidden");
+          document.getElementById("discPriceValue").textContent =
+            discounted.toFixed(2);
+        } else {
+          document.getElementById("discountedPrice").classList.add("hidden");
+        }
+        updatePreview();
+      }
+
+      // Image Handling
+      document.getElementById("image").addEventListener("change", (e) => {
+        galleryImages = Array.from(e.target.files);
+        if (galleryImages.length > 5) {
+          alert("Max 5 images allowed!");
+          e.target.value = "";
+          galleryImages = [];
+          return;
+        }
+        previewGallery();
+      });
+
+      function previewGallery() {
+        const gallery = document.getElementById("imageGallery");
+        gallery.innerHTML = "";
+        galleryImages.forEach((file, index) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const div = document.createElement("div");
+            div.className = "relative group";
+            div.innerHTML = `
+              <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg shadow-md" alt="Preview ${index}">
+              <button onclick="removeGalleryImage(${index})" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                <i class="fas fa-times text-xs"></i>
+              </button>
+            `;
+            gallery.appendChild(div);
+          };
+          reader.readAsDataURL(file);
+        });
+        gallery.classList.remove("hidden");
+        updateProgress();
+      }
+
+      function removeGalleryImage(index) {
+        galleryImages.splice(index, 1);
+        previewGallery();
+      }
+
+      // Load Product for Edit
+      async function loadProductForEdit(id) {
+        editId = new URLSearchParams(window.location.search).get("id") || id;
+        if (!editId) return;
+        try {
+          const res = await fetch(`${API_BASE}/api/admin/products/${editId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const product = await res.json();
+          if (product) {
+            editingProduct = product;
+            document.getElementById("formTitle").textContent = "Edit Product";
+            document.getElementById("name").value = product.name;
+            document.getElementById("description").value =
+              product.description || "";
+            document.getElementById("price").value = product.price;
+            document.getElementById("discount").value = product.discount || 0;
+            document.getElementById("stock").value = product.stock;
+            document.getElementById("category").value = product.category;
+            tags = product.tags || [];
+            updateTagsDisplay();
+
+            if (product.images && product.images.length > 0) {
+              const gallery = document.getElementById("imageGallery");
+              gallery.innerHTML = product.images
+                .map(
+                  (img, index) => `
+                <div class="relative group">
+                  <img src="${API_BASE}${img}" class="w-full h-24 object-cover rounded-lg shadow-md" alt="Existing ${index}">
+                  <div class="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs rounded px-1">Existing ${
+                    index + 1
+                  }</div>
+                </div>
+              `
+                )
+                .join("");
+              gallery.classList.remove("hidden");
+            }
+            document.getElementById("image").required = false;
+            updatePreview();
+            updateProgress();
+          }
+        } catch (error) {
+          console.error("Load edit error:", error);
+          alert("Error loading product for edit");
+        }
+      }
+
+      // Form Submit
+      document
+        .getElementById("productForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          if (!validateStep(4)) return;
+
+          const submitBtn = document.getElementById("submitBtn");
+          const originalText = submitBtn.innerHTML;
+          submitBtn.innerHTML =
+            '<i class="fas fa-spinner loading-spinner mr-2"></i>Saving...';
+          submitBtn.disabled = true;
+
+          const formData = new FormData();
+          formData.append("name", document.getElementById("name").value.trim());
+          formData.append(
+            "description",
+            document.getElementById("description").value.trim()
+          );
+          formData.append("price", document.getElementById("price").value);
+          formData.append(
+            "discount",
+            document.getElementById("discount").value || 0
+          );
+          formData.append("stock", document.getElementById("stock").value);
+          formData.append(
+            "category",
+            document.getElementById("category").value
+          );
+          formData.append("tags", JSON.stringify(tags));
+          galleryImages.forEach((file, index) =>
+            formData.append("images", file, `image${index}.jpg`)
+          );
+
+          const url = editId
+            ? `${API_BASE}/api/admin/products/${editId}`
+            : `${API_BASE}/api/admin/products`;
+          const method = editId ? "PUT" : "POST";
+
+          try {
+            const res = await fetch(url, {
+              method,
+              headers: { Authorization: `Bearer ${token}` },
+              body: formData,
+            });
+
+            if (!res.ok) {
+              let errorData;
+              try {
+                errorData = await res.json();
+              } catch {
+                errorData = { msg: "Server error" };
+              }
+              throw new Error(errorData.msg || `HTTP ${res.status}`);
+            }
+
+            const data = await res.json();
+            alert(data.msg || "Product saved successfully!");
+            window.location.href = "/admin/dashboard.html";
+          } catch (error) {
+            console.error("Submit error:", error);
+            alert("Error: " + error.message);
+          } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+          }
+        });
+
+      // Utility Functions
+      function toggleSidebar() {
+        document
+          .getElementById("sidebar")
+          .classList.toggle("-translate-x-full");
+      }
+
+      function logout() {
+        if (confirm("Logout and return to website?")) {
+          localStorage.removeItem("adminToken");
+          window.location.href = "/";
+        }
+      }
+
+      function validateField(fieldId) {
+        const errorEl = document.getElementById(fieldId + "Error");
+        if (errorEl) errorEl.classList.add("hidden");
+      }
+
+      // Initial calls
+      updateProgress();
+      updatePreview();
+      loadProductForEdit(); // if ?id= present in URL
+    </script>
+  </body>
+</html>

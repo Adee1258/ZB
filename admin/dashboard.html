@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - ZIKRIYA DARBAR FOOD PRODUCTS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+      tailwind.config = {
+        theme: { extend: { fontFamily: { sans: ["Poppins", "sans-serif"] } } },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+      }
+      .sidebar {
+        background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+        height: 100vh;
+        overflow-y: auto;
+      }
+      .stats-card {
+        transition: all 0.3s ease;
+      }
+      .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+      .loading-spinner {
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .order-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      .order-row:hover {
+        background-color: #f9fafb;
+      }
+      .message-row {
+        transition: background-color 0.2s;
+      }
+      .message-row:hover {
+        background-color: #f3f4f6;
+      }
+      .status-badge {
+        padding: 4px 8px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .status-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+      }
+      .status-shipped {
+        background-color: #dbeafe;
+        color: #1e40af;
+      }
+      .status-delivered {
+        background-color: #dcfce7;
+        color: #166534;
+      }
+      .status-rejected {
+        background-color: #fee2e2;
+        color: #dc2626;
+      }
+      .action-btn {
+        padding: 4px 8px;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+      }
+      .approve-btn {
+        background-color: #dcfce7;
+        color: #166534;
+      }
+      .approve-btn:hover {
+        background-color: #16a34a;
+        color: white;
+      }
+      .reject-btn {
+        background-color: #fee2e2;
+        color: #dc2626;
+      }
+      .reject-btn:hover {
+        background-color: #dc2626;
+        color: white;
+      }
+      .product-image-thumb {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 0.25rem;
+      }
+      .no-img-placeholder {
+        width: 40px;
+        height: 40px;
+        background-color: #e5e7eb;
+        border: 2px dashed #9ca3af;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        color: #6b7280;
+        border-radius: 0.25rem;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen flex">
+    <!-- Sidebar -->
+    <div
+      class="sidebar text-white flex flex-col z-50 md:flex-shrink-0 w-64 fixed md:relative h-screen overflow-y-auto transition-transform duration-300 -translate-x-full md:translate-x-0"
+      id="sidebar"
+    >
+      <div class="p-4 border-b border-blue-400 flex-shrink-0">
+        <h1 class="text-2xl font-bold">Admin Panel</h1>
+        <p class="text-sm opacity-90">Professional Dashboard</p>
+      </div>
+
+      <!-- Admin Profile Section in Sidebar -->
+      <div class="p-4 border-b border-blue-300 bg-blue-600 bg-opacity-50">
+        <div class="text-center">
+          <img
+            id="sidebarAdminDP"
+            src="/admin-dp/logo.jpeg"
+            alt="Admin"
+            class="w-16 h-16 rounded-full mx-auto mb-2 border-2 border-white object-cover"
+            onerror="this.onerror=null;this.src='/admin-dp/logo.jpeg';"
+          />
+          <p id="sidebarAdminName" class="font-semibold text-white">Admin</p>
+          <p class="text-xs text-blue-100">Administrator</p>
+        </div>
+      </div>
+
+      <nav class="flex-1 p-4 overflow-y-auto">
+        <ul class="space-y-2">
+          <li>
+            <a
+              href="/admin/dashboard.html"
+              class="flex items-center p-3 rounded-lg hover:bg-blue-500 transition"
+            >
+              <i class="fas fa-tachometer-alt mr-3"></i> Dashboard
+            </a>
+          </li>
+          <li>
+            <a
+              href="/admin/add-product.html"
+              class="flex items-center p-3 rounded-lg hover:bg-blue-500 transition"
+            >
+              <i class="fas fa-plus mr-3"></i> Add Product
+            </a>
+          </li>
+          <li>
+            <a
+              href="/admin/analytics.html"
+              class="flex items-center p-3 rounded-lg hover:bg-blue-500 transition"
+            >
+              <i class="fas fa-chart-bar mr-3"></i> Analytics
+            </a>
+          </li>
+          <li>
+            <a
+              href="/"
+              class="flex items-center p-3 rounded-lg hover:bg-blue-500 transition"
+            >
+              <i class="fas fa-home mr-3"></i> Return to Website
+            </a>
+          </li>
+          <li>
+            <button
+              onclick="logout()"
+              class="flex items-center p-3 rounded-lg hover:bg-red-500 transition w-full text-left"
+            >
+              <i class="fas fa-sign-out-alt mr-3"></i> Logout
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 md:ml-64 p-6 min-h-screen">
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-4xl font-bold text-gray-800">Dashboard</h1>
+          <p class="text-gray-600 mt-1">
+            Welcome back! Manage your stock, orders and customer messages here.
+          </p>
+        </div>
+        <button
+          onclick="toggleSidebar()"
+          class="md:hidden p-3 bg-blue-500 text-white rounded-xl shadow-lg hover:shadow-xl transition"
+        >
+          <i class="fas fa-bars text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div
+          class="stats-card bg-white p-6 rounded-2xl shadow-lg border border-gray-100"
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-600 mb-2">
+                Total Products
+              </h3>
+              <p class="text-3xl font-bold text-blue-600" id="totalProducts">
+                0
+              </p>
+            </div>
+            <i class="fas fa-boxes text-4xl text-blue-400 opacity-80"></i>
+          </div>
+        </div>
+        <div
+          class="stats-card bg-white p-6 rounded-2xl shadow-lg border border-gray-100"
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-600 mb-2">
+                Low Stock
+              </h3>
+              <p class="text-3xl font-bold text-red-600" id="lowStock">0</p>
+            </div>
+            <i
+              class="fas fa-exclamation-triangle text-4xl text-red-400 opacity-80"
+            ></i>
+          </div>
+        </div>
+        <div
+          class="stats-card bg-white p-6 rounded-2xl shadow-lg border border-gray-100"
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-600 mb-2">
+                Total Orders
+              </h3>
+              <p class="text-3xl font-bold text-green-600" id="totalOrders">
+                0
+              </p>
+            </div>
+            <i
+              class="fas fa-shopping-cart text-4xl text-green-400 opacity-80"
+            ></i>
+          </div>
+        </div>
+        <div
+          class="stats-card bg-white p-6 rounded-2xl shadow-lg border border-gray-100"
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-600 mb-2">
+                New Messages
+              </h3>
+              <p class="text-3xl font-bold text-purple-600" id="totalMessages">
+                0
+              </p>
+            </div>
+            <i class="fas fa-envelope text-4xl text-purple-400 opacity-80"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Orders Section -->
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
+        <div class="p-6 border-b border-gray-200">
+          <h2 class="text-xl font-bold text-gray-800">Recent Orders</h2>
+          <p class="text-gray-600 text-sm mt-1">
+            Latest orders with status. Click row for details.
+          </p>
+        </div>
+        <div id="ordersLoader" class="p-6 text-center">
+          <i
+            class="fas fa-spinner loading-spinner text-2xl text-blue-500 mb-2"
+          ></i>
+          <p>Loading orders...</p>
+        </div>
+        <div id="ordersTableContainer" class="hidden overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Order ID
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Buyer
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Product
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Qty
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Total (Rs)
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Status
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Actions
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Date
+                </th>
+              </tr>
+            </thead>
+            <tbody id="ordersTable" class="divide-y divide-gray-200">
+              <!-- Orders load here -->
+            </tbody>
+          </table>
+          <div id="noOrdersMsg" class="p-6 text-center text-gray-500 hidden">
+            No orders yet. Place one from the website!
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Messages Section -->
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
+        <div
+          class="p-6 border-b border-gray-200 flex justify-between items-center"
+        >
+          <div>
+            <h2 class="text-xl font-bold text-gray-800">Customer Messages</h2>
+            <p class="text-gray-600 text-sm mt-1">
+              Latest inquiries from contact form
+            </p>
+          </div>
+          <button
+            onclick="loadContactMessages()"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+          >
+            <i class="fas fa-sync mr-2"></i> Refresh
+          </button>
+        </div>
+        <div id="messagesLoader" class="p-6 text-center hidden">
+          <i
+            class="fas fa-spinner loading-spinner text-2xl text-blue-500 mb-2"
+          ></i>
+          <p>Loading messages...</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Name
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Phone
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Email
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Message
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Date
+                </th>
+              </tr>
+            </thead>
+            <tbody id="messagesTable" class="divide-y divide-gray-200">
+              <!-- Messages load here -->
+            </tbody>
+          </table>
+          <div id="noMessagesMsg" class="p-6 text-center text-gray-500">
+            No messages yet.
+          </div>
+        </div>
+      </div>
+
+      <!-- Products Overview Section -->
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
+        <div
+          class="p-6 border-b border-gray-200 flex justify-between items-center"
+        >
+          <div>
+            <h2 class="text-xl font-bold text-gray-800">Products Overview</h2>
+            <p class="text-gray-600 text-sm mt-1">
+              View and manage all products.
+            </p>
+          </div>
+          <a
+            href="/admin/add-product.html"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <i class="fas fa-plus mr-2"></i> Add New Product
+          </a>
+        </div>
+
+        <div class="p-6">
+          <input
+            type="text"
+            id="searchAdmin"
+            placeholder="Search products by name..."
+            class="w-full md:w-80 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+            onkeyup="loadProducts(this.value)"
+          />
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Image
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Name
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Price
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Stock
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Category
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody id="productsTable" class="divide-y divide-gray-200">
+              <!-- Products will load here -->
+            </tbody>
+          </table>
+
+          <div
+            class="p-4 flex justify-between items-center border-t bg-gray-50"
+          >
+            <p id="pageInfo" class="text-sm text-gray-600">Page 1 of 1</p>
+            <div>
+              <button
+                id="prevBtn"
+                onclick="changePage(-1)"
+                class="px-4 py-2 border border-gray-300 rounded-lg mr-2 disabled:opacity-50"
+                disabled
+              >
+                Previous
+              </button>
+              <button
+                id="nextBtn"
+                onclick="changePage(1)"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+                disabled
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="noProductsMsg" class="p-10 text-center text-gray-500 hidden">
+          No products found.
+        </div>
+      </div>
+
+      <!-- Bill Details Modal -->
+      <div
+        id="billModal"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50"
+      >
+        <div
+          class="bg-white dark:bg-gray-800 p-6 rounded-2xl max-w-2xl w-full m-4 max-h-[80vh] overflow-y-auto"
+        >
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold">Order Details & Bill</h3>
+            <button
+              onclick="closeBillModal()"
+              class="text-gray-500 hover:text-gray-700"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div id="billContent" class="mb-4"></div>
+          <div class="flex justify-end space-x-2 pt-4 border-t">
+            <button
+              onclick="printBill()"
+              class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Print
+            </button>
+            <button
+              onclick="downloadBill()"
+              class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:5000";
+      const token = localStorage.getItem("adminToken");
+      if (!token) {
+        alert("Pehle login karo bhai!");
+        window.location.href = "/admin/login.html";
+      }
+
+      let allOrders = [];
+      let allProducts = [];
+      let allMessages = [];
+
+      // Toast function
+      function showToast(msg, type = "success") {
+        const toast = document.createElement("div");
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white ${
+          type === "success" ? "bg-green-500" : "bg-red-500"
+        }`;
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+      }
+
+      // Load Orders
+      async function loadOrders() {
+        try {
+          const res = await fetch(`${API_BASE}/api/admin/orders`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) {
+            if (res.status === 401) {
+              alert("Session expired. Login again.");
+              localStorage.removeItem("adminToken");
+              window.location.href = "/admin/login.html";
+              return;
+            }
+            throw new Error("Failed to load orders");
+          }
+          allOrders = await res.json();
+          displayOrders(allOrders);
+          document.getElementById("totalOrders").textContent = allOrders.length;
+
+          if (document.getElementById("ordersLoader"))
+            document.getElementById("ordersLoader").classList.add("hidden");
+          if (document.getElementById("ordersTableContainer"))
+            document
+              .getElementById("ordersTableContainer")
+              .classList.remove("hidden");
+          if (allOrders.length === 0 && document.getElementById("noOrdersMsg"))
+            document.getElementById("noOrdersMsg").classList.remove("hidden");
+        } catch (error) {
+          console.error("Load orders error:", error);
+          showToast("Failed to load orders", "error");
+        }
+      }
+
+      // Load Products
+      async function loadProducts(search = "") {
+        try {
+          const res = await fetch(`${API_BASE}/api/admin/products`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) {
+            if (res.status === 401) {
+              alert("Session expired.");
+              localStorage.removeItem("adminToken");
+              window.location.href = "/admin/login.html";
+              return;
+            }
+            throw new Error("Failed to load products");
+          }
+          allProducts = await res.json();
+          const filtered = allProducts.filter((p) =>
+            p.name.toLowerCase().includes(search.toLowerCase())
+          );
+          displayProducts(filtered);
+          updateProductStats(filtered);
+        } catch (error) {
+          console.error("Load products error:", error);
+          showToast("Failed to load products", "error");
+        }
+      }
+
+      // Load Contact Messages
+      async function loadContactMessages() {
+        if (document.getElementById("messagesLoader"))
+          document.getElementById("messagesLoader").classList.remove("hidden");
+        if (document.getElementById("noMessagesMsg"))
+          document.getElementById("noMessagesMsg").classList.add("hidden");
+
+        try {
+          const res = await fetch(`${API_BASE}/api/admin/contact`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) throw new Error("Failed to load messages");
+          allMessages = await res.json();
+          displayMessages(allMessages);
+          document.getElementById("totalMessages").textContent =
+            allMessages.length;
+        } catch (error) {
+          console.error("Load messages error:", error);
+          showToast("Failed to load messages", "error");
+        } finally {
+          if (document.getElementById("messagesLoader"))
+            document.getElementById("messagesLoader").classList.add("hidden");
+        }
+      }
+
+      // Display Messages
+      function displayMessages(messages) {
+        const tbody = document.getElementById("messagesTable");
+        if (messages.length === 0) {
+          if (document.getElementById("noMessagesMsg"))
+            document.getElementById("noMessagesMsg").classList.remove("hidden");
+          tbody.innerHTML = "";
+          return;
+        }
+        if (document.getElementById("noMessagesMsg"))
+          document.getElementById("noMessagesMsg").classList.add("hidden");
+
+        tbody.innerHTML = messages
+          .reverse()
+          .slice(0, 15)
+          .map(
+            (m) => `
+      <tr class="message-row">
+        <td class="px-6 py-4 text-sm font-medium">${m.name}</td>
+        <td class="px-6 py-4 text-sm">${m.phone}</td>
+        <td class="px-6 py-4 text-sm">${m.email || "-"}</td>
+        <td class="px-6 py-4 text-sm max-w-xs truncate">${m.message}</td>
+        <td class="px-6 py-4 text-sm text-gray-500">${new Date(
+          m.createdAt
+        ).toLocaleString()}</td>
+      </tr>
+    `
+          )
+          .join("");
+      }
+
+      // Display Orders
+      function displayOrders(orders) {
+        const tbody = document.getElementById("ordersTable");
+        tbody.innerHTML = orders
+          .slice(0, 10)
+          .map((order) => {
+            const product = allProducts.find((p) => p._id === order.productId);
+            const statusClass = `status-${order.status.toLowerCase()}`;
+            const isPending = order.status === "Pending";
+
+            // Get product image - handle all cases
+            let productImageHtml = `<div class="w-12 h-12 bg-gray-300 rounded mr-2 flex items-center justify-center text-xs text-gray-600 font-medium">No Img</div>`;
+            if (
+              product &&
+              product.images &&
+              product.images.length > 0 &&
+              product.images[0]
+            ) {
+              const imgSrc = `${API_BASE}${product.images[0]}`;
+              productImageHtml = `<img src="${imgSrc}" class="w-12 h-12 object-cover rounded mr-2" alt="${order.productName}" style="border: 1px solid #ddd;" />`;
+            }
+
+            return `
+        <tr class="order-row ${
+          isPending ? "bg-yellow-50" : ""
+        }" onclick="showOrderDetails('${order._id}')">
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#${order._id.slice(
+            -6
+          )}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+            order.buyer.name
+          } <br><small class="text-gray-400">${order.buyer.phone}</small></td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center">
+            ${productImageHtml}
+            ${order.productName}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${
+            order.qty
+          }</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">Rs ${order.total.toFixed(
+            0
+          )}</td>
+          <td class="px-6 py-4 whitespace-nowrap"><span class="status-badge ${statusClass}">${
+              order.status
+            }</span></td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+            <button type="button" onclick="updateStatus('${
+              order._id
+            }', 'Shipped', event); return false;" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs font-semibold">Approve</button>
+            <button type="button" onclick="updateStatus('${
+              order._id
+            }', 'Rejected', event); return false;" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-semibold">Reject</button>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(
+            order.createdAt
+          ).toLocaleDateString()}</td>
+        </tr>
+      `;
+          })
+          .join("");
+      }
+
+      // Update Product Stats
+      function updateProductStats(prods) {
+        document.getElementById("totalProducts").textContent = prods.length;
+        const lowStockCount = prods.filter((p) => p.stock < 10).length;
+        document.getElementById("lowStock").textContent = lowStockCount;
+      }
+
+      // Display Products - Clean & Safe Image Handling
+      function displayProducts(prods) {
+        const tbody = document.getElementById("productsTable");
+        if (prods.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">No products found</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = prods
+          .map(
+            (p) => `
+      <tr>
+        <td class="px-4 py-3">
+          ${
+            p.images && p.images.length > 0 && p.images[0]
+              ? `<img src="${API_BASE}${p.images[0]}" class="w-12 h-12 object-cover rounded" alt="${p.name}" onerror="this.onerror=null; this.parentNode.innerHTML='<div class=\\'w-12 h-12 bg-gray-300 rounded flex items-center justify-center text-gray-600 text-xs font-medium\\'>No Img</div>'">`
+              : `<div class="w-12 h-12 bg-gray-300 rounded flex items-center justify-center text-gray-600 text-xs font-medium">No Img</div>`
+          }
+        </td>
+        <td class="px-4 py-3">${p.name}</td>
+        <td class="px-4 py-3">Rs ${p.price}</td>
+        <td class="px-4 py-3 ${p.stock < 10 ? "text-red-600 font-bold" : ""}">${
+              p.stock
+            }</td>
+        <td class="px-4 py-3">${p.category || "N/A"}</td>
+        <td class="px-4 py-3">
+          <a href="/admin/add-product.html?id=${
+            p._id
+          }" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded mr-2">Edit</a>
+          <button onclick="deleteProduct('${
+            p._id
+          }')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">Delete</button>
+        </td>
+      </tr>
+    `
+          )
+          .join("");
+      }
+
+      // Delete Product
+      async function deleteProduct(id) {
+        if (!confirm("Delete karna hai?")) return;
+        try {
+          const res = await fetch(`${API_BASE}/api/admin/products/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) throw new Error("Delete failed");
+          loadProducts("");
+          showToast("Product deleted!");
+        } catch (error) {
+          showToast("Delete error", "error");
+        }
+      }
+
+      // Show Order Details - Bill Modal
+      function showOrderDetails(orderId) {
+        const order = allOrders.find((o) => o._id === orderId);
+        if (!order) {
+          alert("Order not found");
+          return;
+        }
+
+        const product = allProducts.find((p) => p._id === order.productId);
+        const date = new Date(order.createdAt).toLocaleDateString("en-PK");
+
+        const billHtml = `
+          <div class="border-b pb-4 mb-4">
+            <h4 class="font-bold text-lg mb-2">Order #${order._id.slice(
+              -6
+            )}</h4>
+            <p class="text-sm text-gray-600">Date: ${date}</p>
+            <p class="text-sm text-gray-600">Status: <span class="font-bold text-blue-600">${
+              order.status
+            }</span></p>
+          </div>
+
+          <div class="mb-4">
+            <h5 class="font-bold mb-2">Product Details:</h5>
+            <table class="w-full text-sm">
+              <tr class="border-b">
+                <td class="py-2">Product Name:</td>
+                <td class="font-semibold">${order.productName}</td>
+              </tr>
+              <tr class="border-b">
+                <td class="py-2">Quantity:</td>
+                <td class="font-semibold">${order.qty}</td>
+              </tr>
+              <tr class="border-b">
+                <td class="py-2">Unit Price:</td>
+                <td class="font-semibold">Rs ${(
+                  order.subtotal / order.qty
+                ).toFixed(0)}</td>
+              </tr>
+              <tr class="border-b">
+                <td class="py-2">Subtotal:</td>
+                <td class="font-semibold">Rs ${order.subtotal.toFixed(0)}</td>
+              </tr>
+              <tr class="bg-blue-50">
+                <td class="py-2 font-bold">Total Amount:</td>
+                <td class="font-bold text-green-600">Rs ${order.total.toFixed(
+                  0
+                )}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="mb-4">
+            <h5 class="font-bold mb-2">Buyer Information:</h5>
+            <p class="text-sm"><strong>Name:</strong> ${order.buyer.name}</p>
+            <p class="text-sm"><strong>Phone:</strong> ${order.buyer.phone}</p>
+            <p class="text-sm"><strong>Address:</strong> ${
+              order.buyer.address
+            }</p>
+          </div>
+        `;
+
+        document.getElementById("billContent").innerHTML = billHtml;
+        document.getElementById("billModal").classList.remove("hidden");
+      }
+
+      // Close Bill Modal
+      function closeBillModal() {
+        document.getElementById("billModal").classList.add("hidden");
+      }
+
+      // Update Order Status - Approve or Reject
+      async function updateStatus(orderId, newStatus, event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        console.log("🔵 updateStatus called:", {
+          orderId,
+          newStatus,
+          tokenExists: !!token,
+        });
+
+        if (!confirm(`${newStatus} کرنا ہے؟`)) return;
+
+        const button = event.target;
+        button.disabled = true;
+        button.textContent = "Processing...";
+
+        try {
+          const url = `${API_BASE}/api/admin/orders/${orderId}`;
+          console.log("🟡 Sending PUT request to:", url);
+
+          const res = await fetch(url, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ status: newStatus }),
+          });
+
+          console.log("🟢 Response received:", res.status, res.statusText);
+          const data = await res.json();
+          console.log("📦 Response data:", data);
+
+          if (!res.ok) {
+            throw new Error(data.msg || "Update failed");
+          }
+
+          alert(
+            `✅ Order ${newStatus} successfully!\n\nOrder ID: ${orderId.slice(
+              -6
+            )}`
+          );
+          await new Promise((r) => setTimeout(r, 500)); // Small delay
+          await loadOrders();
+        } catch (error) {
+          console.error("❌ Update error:", error);
+          alert("❌ Error: " + error.message);
+        } finally {
+          button.disabled = false;
+          button.textContent = newStatus === "Shipped" ? "Approve" : "Reject";
+        }
+      }
+
+      // Sidebar & Logout
+      function toggleSidebar() {
+        document
+          .getElementById("sidebar")
+          .classList.toggle("-translate-x-full");
+      }
+
+      function logout() {
+        if (confirm("Logout karna hai?")) {
+          localStorage.removeItem("adminToken");
+          window.location.href = "/";
+        }
+      }
+
+      // Load Dashboard - Products first, then orders
+      async function loadDashboard() {
+        try {
+          // Load admin profile in sidebar
+          await loadAdminProfile();
+          // Load products first
+          await loadProducts("");
+          // Then load orders and messages in parallel
+          await Promise.all([loadOrders(), loadContactMessages()]);
+        } catch (error) {
+          console.error("Dashboard load error:", error);
+        }
+      }
+
+      // Load Admin Profile for Sidebar
+      async function loadAdminProfile() {
+        const token = localStorage.getItem("adminToken");
+
+        if (!token) {
+          console.log("⚠️ No token found");
+          return;
+        }
+
+        fetch(`${API_BASE}/api/admin/profile`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            console.log("👤 Admin profile loaded:", data);
+
+            if (data.success && data.profilePicture) {
+              const imageUrl = `${API_BASE}/admin-dp/${data.profilePicture}`;
+              console.log("🖼️ Profile image URL:", imageUrl);
+
+              // Update all admin profile images
+              const profileImages =
+                document.querySelectorAll(".admin-profile-img");
+              profileImages.forEach((img) => {
+                img.src = imageUrl;
+                img.style.display = "block";
+                img.onerror = () => {
+                  console.log("❌ Image failed to load from:", imageUrl);
+                  img.src = "/images/logo.jpeg";
+                };
+              });
+
+              // Also save to localStorage for quick access
+              const adminData = {
+                username: data.username,
+                profilePicture: data.profilePicture,
+              };
+              localStorage.setItem("adminProfile", JSON.stringify(adminData));
+            } else {
+              console.log("ℹ️ No profile picture set yet");
+              // Use default logo
+              const profileImages =
+                document.querySelectorAll(".admin-profile-img");
+              profileImages.forEach((img) => {
+                img.src = "/images/logo.jpeg";
+              });
+            }
+          })
+          .catch((error) => {
+            console.error("❌ Error loading profile:", error);
+            // Fallback to logo
+            const profileImages =
+              document.querySelectorAll(".admin-profile-img");
+            profileImages.forEach((img) => {
+              img.src = "/images/logo.jpeg";
+            });
+          });
+      }
+
+      // Call when page loads
+      document.addEventListener("DOMContentLoaded", function () {
+        loadAdminProfile(); // Load profile first
+        setTimeout(() => loadDashboard(), 500); // Then load dashboard
+      });
+    </script>
+  </body>
+</html>
