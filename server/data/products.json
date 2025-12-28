@@ -1,0 +1,21 @@
+[
+  {
+    "_id": "sample-001",
+    "name": "Test Haldi Powder (500g)",
+    "description": "Premium quality haldi, 100% natural and fresh from farms.",
+    "price": 150,
+    "discount": 10,
+    "stock": 50,
+    "category": "Masalay",
+    "tags": [
+      "fresh",
+      "organic",
+      "halal"
+    ],
+    "sku": "HAL-20251210-001",
+    "images": [
+      "https://via.placeholder.com/300x200?text=Haldi"
+    ],
+    "createdAt": "2025-12-10T05:14:38.613Z"
+  }
+]
