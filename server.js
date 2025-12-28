@@ -62,13 +62,19 @@ if (fs.existsSync(publicPath)) {
   );
 }
 
-const adminPath = path.join(__dirname, "..", "zikriya-foods-frontend", "admin");
+const adminPath = path.join(
+  __dirname,
+  "..",
+  "zikriya-foods-frontend",
+  "public",
+  "admin"
+);
 console.log("Admin static path:", adminPath);
 if (fs.existsSync(adminPath)) {
   console.log("Admin folder exists! Good.");
 } else {
   console.log(
-    "Admin folder NOT found! Check if 'zikriya-foods-frontend/admin' exists next to backend folder."
+    "Admin folder NOT found! Check if 'zikriya-foods-frontend/public/admin' exists next to backend folder."
   );
 }
 
