@@ -131,7 +131,20 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + "-" + file.originalname);
   },
 });
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    try {
+      if (file.mimetype && file.mimetype.startsWith("image/")) {
+        cb(null, true);
+      } else {
+        cb(new Error("Only image files are allowed"));
+      }
+    } catch (e) {
+      cb(new Error("File filter error"));
+    }
+  },
+});
 
 // JWT Auth Middleware
 const auth = (req, res, next) => {
@@ -196,6 +209,22 @@ app.post(
     try {
       const { name, description, price, discount, stock, category, tags } =
         req.body;
+      if (!name || !price || !stock) {
+        return res
+          .status(400)
+          .json({ msg: "Name, price and stock are required" });
+      }
+      const numPrice = Number(price);
+      const numStock = Number(stock);
+      const numDiscount = discount ? Number(discount) : 0;
+      if (Number.isNaN(numPrice) || Number.isNaN(numStock)) {
+        return res.status(400).json({ msg: "Price and stock must be numbers" });
+      }
+      if (numDiscount < 0 || numDiscount > 100) {
+        return res
+          .status(400)
+          .json({ msg: "Discount must be between 0 and 100" });
+      }
       const images = req.files
         ? req.files.map((f) => "/uploads/" + f.filename)
         : [];
@@ -203,9 +232,9 @@ app.post(
       const product = new Product({
         name,
         description,
-        price,
-        discount: discount || 0,
-        stock,
+        price: numPrice,
+        discount: numDiscount || 0,
+        stock: numStock,
         category,
         tags: tags ? JSON.parse(tags) : [],
         images,
@@ -215,7 +244,9 @@ app.post(
       res.json({ msg: "Product added successfully!" });
     } catch (err) {
       console.error(err);
-      res.status(500).json({ msg: "Error adding product" });
+      res
+        .status(500)
+        .json({ msg: err.message || "Error adding product", error: true });
     }
   }
 );
@@ -254,12 +285,23 @@ app.put(
       const update = {
         name,
         description,
-        price,
-        discount: discount || 0,
-        stock,
+        price: price ? Number(price) : undefined,
+        discount: discount ? Number(discount) : 0,
+        stock: stock ? Number(stock) : undefined,
         category,
         tags: tags ? JSON.parse(tags) : [],
       };
+      if (update.price !== undefined && Number.isNaN(update.price)) {
+        return res.status(400).json({ msg: "Price must be a number" });
+      }
+      if (update.stock !== undefined && Number.isNaN(update.stock)) {
+        return res.status(400).json({ msg: "Stock must be a number" });
+      }
+      if (update.discount < 0 || update.discount > 100) {
+        return res
+          .status(400)
+          .json({ msg: "Discount must be between 0 and 100" });
+      }
 
       if (req.files && req.files.length > 0) {
         update.images = req.files.map((f) => "/uploads/" + f.filename);
@@ -269,7 +311,9 @@ app.put(
       res.json({ msg: "Product updated successfully!" });
     } catch (err) {
       console.error(err);
-      res.status(500).json({ msg: "Error updating product" });
+      res
+        .status(500)
+        .json({ msg: err.message || "Error updating product", error: true });
     }
   }
 );
@@ -337,13 +381,18 @@ app.post("/api/orders", async (req, res) => {
       return res.status(400).json({ msg: "Missing required fields" });
     }
 
+    const numQty = Number(qty);
+    if (!Number.isFinite(numQty) || numQty <= 0) {
+      return res.status(400).json({ msg: "Invalid quantity" });
+    }
+
     // Check product stock
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ msg: "Product not found" });
     }
 
-    if (product.stock < qty) {
+    if (product.stock < numQty) {
       return res.status(400).json({ msg: "Insufficient stock" });
     }
 
@@ -356,7 +405,7 @@ app.post("/api/orders", async (req, res) => {
         phone: buyer.phone,
         address: buyer.address,
       },
-      qty,
+      qty: numQty,
       subtotal,
       total,
       status: "Pending",
@@ -365,7 +414,7 @@ app.post("/api/orders", async (req, res) => {
     await newOrder.save();
 
     // Reduce stock
-    product.stock -= qty;
+    product.stock -= numQty;
     await product.save();
 
     res.json({
@@ -417,6 +466,26 @@ app.get("/api/admin/contact", auth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Error fetching messages" });
+  }
+});
+
+// Delete a contact message
+app.delete("/api/admin/contact/:id", auth, async (req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      return res
+        .status(503)
+        .json({ msg: "Database not connected, cannot delete" });
+    }
+    const id = req.params.id;
+    const deleted = await Contact.findByIdAndDelete(id);
+    if (!deleted) {
+      return res.status(404).json({ msg: "Message not found" });
+    }
+    res.json({ msg: "Message deleted", id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Error deleting message" });
   }
 });
 
