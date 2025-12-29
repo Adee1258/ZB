@@ -376,6 +376,8 @@ app.get("/api/admin/orders", auth, async (req, res) => {
 app.post("/api/orders", async (req, res) => {
   try {
     const { productId, buyer, qty, subtotal, total } = req.body;
+    console.log("POST /api/orders", { productId, qty, subtotal, total });
+    console.log("DB readyState:", mongoose.connection.readyState, "ObjectId.isValid:", mongoose.Types.ObjectId.isValid(productId));
 
     if (!productId || !buyer || !qty) {
       return res.status(400).json({ msg: "Missing required fields" });
@@ -386,42 +388,68 @@ app.post("/api/orders", async (req, res) => {
       return res.status(400).json({ msg: "Invalid quantity" });
     }
 
-    // Check product stock
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ msg: "Product not found" });
+    if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(productId)) {
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({ msg: "Product not found" });
+      }
+      if (product.stock < numQty) {
+        return res.status(400).json({ msg: "Insufficient stock" });
+      }
+      const newOrder = new Order({
+        productId,
+        productName: product.name,
+        buyer: {
+          name: buyer.name,
+          phone: buyer.phone,
+          address: buyer.address,
+        },
+        qty: numQty,
+        subtotal,
+        total,
+        status: "Pending",
+      });
+      await newOrder.save();
+      product.stock -= numQty;
+      await product.save();
+      return res.json({
+        msg: "Order created successfully!",
+        order: newOrder,
+        _id: newOrder._id,
+      });
+    } else {
+      console.log("Orders fallback path (DB disconnected or invalid ID)");
+      const list = readProductsFallback();
+      const product = list.find((p) => p._id === productId);
+      if (!product) {
+        return res.status(404).json({ msg: "Product not found (fallback)" });
+      }
+      if (product.stock < numQty) {
+        return res.status(400).json({ msg: "Insufficient stock (fallback)" });
+      }
+      const fakeId = "FAKE-" + Date.now().toString(36);
+      const newOrder = {
+        _id: fakeId,
+        productId,
+        productName: product.name,
+        buyer: {
+          name: buyer.name,
+          phone: buyer.phone,
+          address: buyer.address,
+        },
+        qty: numQty,
+        subtotal,
+        total,
+        status: "Pending",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      return res.json({
+        msg: "Order created successfully! (fallback, DB not connected)",
+        order: newOrder,
+        _id: newOrder._id,
+      });
     }
-
-    if (product.stock < numQty) {
-      return res.status(400).json({ msg: "Insufficient stock" });
-    }
-
-    // Create order
-    const newOrder = new Order({
-      productId,
-      productName: product.name,
-      buyer: {
-        name: buyer.name,
-        phone: buyer.phone,
-        address: buyer.address,
-      },
-      qty: numQty,
-      subtotal,
-      total,
-      status: "Pending",
-    });
-
-    await newOrder.save();
-
-    // Reduce stock
-    product.stock -= numQty;
-    await product.save();
-
-    res.json({
-      msg: "Order created successfully!",
-      order: newOrder,
-      _id: newOrder._id,
-    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Error creating order" });
