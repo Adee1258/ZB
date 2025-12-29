@@ -62,44 +62,15 @@ const initAdmin = async () => {
 };
 initAdmin();
 
-// ===== UPLOADS PATH (Backend only needs this for image uploads) =====
-const isServerless = !!process.env.VERCEL;
-const uploadsPath = isServerless
-  ? path.join("/tmp", "uploads")
-  : path.join(__dirname, "uploads");
+// ===== IMAGE STORAGE - Base64 in MongoDB (Vercel Compatible) =====
+// Since Vercel is serverless, we'll store images as Base64 in MongoDB
 
-console.log("📁 Uploads path:", uploadsPath);
-if (!fs.existsSync(uploadsPath)) {
-  fs.mkdirSync(uploadsPath, { recursive: true });
-  console.log("✅ Created uploads folder");
-}
-
-const adminDpPath = isServerless
-  ? path.join("/tmp", "admin-dp")
-  : path.join(__dirname, "admin-dp");
-
-console.log("📁 Admin DP path:", adminDpPath);
-if (!fs.existsSync(adminDpPath)) {
-  fs.mkdirSync(adminDpPath, { recursive: true });
-  console.log("✅ Created admin-dp folder");
-}
-
-// Multer setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const fullPath = req.body.type === "dp" ? adminDpPath : uploadsPath;
-    if (!fs.existsSync(fullPath)) {
-      fs.mkdirSync(fullPath, { recursive: true });
-    }
-    cb(null, fullPath);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
+// Multer setup for memory storage
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
     if (file.mimetype && file.mimetype.startsWith("image/")) {
       cb(null, true);
@@ -122,6 +93,11 @@ const auth = (req, res, next) => {
   } catch (err) {
     res.status(401).json({ msg: "Invalid token" });
   }
+};
+
+// Helper function to convert buffer to base64
+const bufferToBase64 = (buffer, mimetype) => {
+  return `data:${mimetype};base64,${buffer.toString("base64")}`;
 };
 
 // ====================== API ROUTES ======================
@@ -159,15 +135,11 @@ app.post("/api/admin/login", async (req, res) => {
 
 app.get("/api/admin/profile", auth, async (req, res) => {
   try {
-    let filename = "logo.jpeg";
-    const filePath = path.join(adminDpPath, filename);
-    if (!fs.existsSync(filePath)) filename = null;
-
     res.json({
       success: true,
       username: "admin",
-      profilePicture: filename,
-      dp: filename ? "/admin-dp/" + filename : null,
+      profilePicture: "logo.jpeg",
+      dp: null,
     });
   } catch (err) {
     res.status(500).json({ success: false });
@@ -196,8 +168,9 @@ app.post(
         return res.status(400).json({ msg: "Price and stock must be numbers" });
       }
 
+      // Convert uploaded images to base64
       const images = req.files
-        ? req.files.map((f) => "/uploads/" + f.filename)
+        ? req.files.map((file) => bufferToBase64(file.buffer, file.mimetype))
         : [];
 
       const product = new Product({
@@ -208,11 +181,11 @@ app.post(
         stock: numStock,
         category,
         tags: tags ? JSON.parse(tags) : [],
-        images,
+        images, // Store base64 images directly
       });
 
       await product.save();
-      res.json({ msg: "Product added successfully!" });
+      res.json({ msg: "Product added successfully!", product });
     } catch (err) {
       console.error(err);
       res.status(500).json({ msg: err.message || "Error adding product" });
@@ -258,8 +231,11 @@ app.put(
         tags: tags ? JSON.parse(tags) : [],
       };
 
+      // Convert new images to base64
       if (req.files && req.files.length > 0) {
-        update.images = req.files.map((f) => "/uploads/" + f.filename);
+        update.images = req.files.map((file) =>
+          bufferToBase64(file.buffer, file.mimetype)
+        );
       }
 
       await Product.updateOne({ _id: req.params.id }, update);
@@ -414,10 +390,6 @@ app.post("/api/contact", async (req, res) => {
   }
 });
 
-// ===== SERVE UPLOADED FILES =====
-app.use("/uploads", express.static(uploadsPath));
-app.use("/admin-dp", express.static(adminDpPath));
-
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ msg: "Endpoint not found" });
@@ -426,7 +398,7 @@ app.use((req, res) => {
 // Start server
 const PORT = process.env.PORT || 5000;
 if (process.env.VERCEL) {
-  module.exports = (req, res) => app(req, res);
+  module.exports = app;
 } else {
   app.listen(PORT, () => {
     console.log(`\n🚀 BACKEND API RUNNING ON PORT ${PORT}`);
