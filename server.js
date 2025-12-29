@@ -16,8 +16,17 @@ const Contact = require("./server/models/contact.js");
 const app = express();
 
 // Middlewares
-app.use(cors({ origin: "*" }));
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  })
+);
 app.use(express.json({ limit: "10mb" }));
+app.options("*", cors());
 
 // Request logging
 app.use((req, res, next) => {
@@ -97,6 +106,18 @@ if (!fs.existsSync(adminDpPath)) {
   console.log("Created admin-dp folder in backend.");
 }
 
+const readProductsFallback = () => {
+  try {
+    const pjson = path.join(__dirname, "server", "data", "products.json");
+    if (fs.existsSync(pjson)) {
+      const data = fs.readFileSync(pjson, "utf-8");
+      return JSON.parse(data);
+    }
+    return [];
+  } catch {
+    return [];
+  }
+};
 // Multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -147,6 +168,25 @@ app.post("/api/admin/login", async (req, res) => {
   res.json({ token, msg: "Login successful" });
 });
 
+app.get("/api/admin/profile", auth, async (req, res) => {
+  try {
+    let filename = "logo.jpeg";
+    const filePath = path.join(adminDpPath, filename);
+    if (!fs.existsSync(filePath)) {
+      filename = null;
+    }
+    const username = "admin";
+    const dp = filename ? "/admin-dp/" + filename : null;
+    res.json({
+      success: true,
+      username,
+      profilePicture: filename,
+      dp,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
 // ====================== ADMIN PRODUCTS CRUD ======================
 app.post(
   "/api/admin/products",
@@ -182,8 +222,12 @@ app.post(
 
 app.get("/api/admin/products", auth, async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
-    res.json(products);
+    if (mongoose.connection.readyState === 1) {
+      const products = await Product.find().sort({ createdAt: -1 });
+      return res.json(products);
+    }
+    const products = readProductsFallback();
+    return res.json(products);
   } catch (err) {
     res.status(500).json({ msg: "Error fetching products" });
   }
@@ -242,7 +286,11 @@ app.delete("/api/admin/products/:id", auth, async (req, res) => {
 // ====================== PUBLIC PRODUCTS (for frontend display) ======================
 app.get("/api/products", async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    if (mongoose.connection.readyState === 1) {
+      const products = await Product.find().sort({ createdAt: -1 });
+      return res.json(products);
+    }
+    const products = readProductsFallback();
     res.json(products);
   } catch (err) {
     console.error(err);
@@ -252,9 +300,15 @@ app.get("/api/products", async (req, res) => {
 
 app.get("/api/products/:id", async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ msg: "Product not found" });
-    res.json(product);
+    if (mongoose.connection.readyState === 1) {
+      const product = await Product.findById(req.params.id);
+      if (!product) return res.status(404).json({ msg: "Product not found" });
+      return res.json(product);
+    }
+    const list = readProductsFallback();
+    const item = list.find((p) => p._id === req.params.id);
+    if (!item) return res.status(404).json({ msg: "Product not found" });
+    res.json(item);
   } catch (err) {
     res.status(500).json({ msg: "Error fetching product" });
   }
@@ -263,8 +317,11 @@ app.get("/api/products/:id", async (req, res) => {
 // ====================== ADMIN ORDERS ======================
 app.get("/api/admin/orders", auth, async (req, res) => {
   try {
-    const orders = await Order.find().sort({ createdAt: -1 });
-    res.json(orders);
+    if (mongoose.connection.readyState === 1) {
+      const orders = await Order.find().sort({ createdAt: -1 });
+      return res.json(orders);
+    }
+    return res.json([]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Error fetching orders" });
@@ -322,15 +379,6 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
-app.get("/api/admin/orders", auth, async (req, res) => {
-  try {
-    const orders = await Order.find().sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: "Error fetching orders" });
-  }
-});
 
 app.put("/api/admin/orders/:id", auth, async (req, res) => {
   try {
@@ -361,8 +409,11 @@ app.put("/api/admin/orders/:id", auth, async (req, res) => {
 // ====================== ADMIN CONTACT MESSAGES ======================
 app.get("/api/admin/contact", auth, async (req, res) => {
   try {
-    const messages = await Contact.find().sort({ createdAt: -1 });
-    res.json(messages);
+    if (mongoose.connection.readyState === 1) {
+      const messages = await Contact.find().sort({ createdAt: -1 });
+      return res.json(messages);
+    }
+    return res.json([]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Error fetching messages" });
