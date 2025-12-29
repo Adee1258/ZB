@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "name": "zikriya-backend-api",
   "builds": [
     {
       "src": "server.js",
@@ -8,8 +9,24 @@
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "server.js",
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    },
+    {
+      "src": "/uploads/(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/admin-dp/(.*)",
+      "dest": "server.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "server.js"
     }
-  ]
+  ],
+  "env": {
+    "VERCEL": "true"
+  }
 }
