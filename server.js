@@ -33,6 +33,7 @@ app.use(
 );
 
 app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.options("*", cors());
 
 // Request logging
@@ -41,11 +42,34 @@ app.use((req, res, next) => {
   next();
 });
 
-// MongoDB Connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected!"))
-  .catch((err) => console.error("❌ MongoDB Error:", err));
+// MongoDB Connection with retry
+let isConnected = false;
+
+const connectDB = async () => {
+  if (isConnected) return;
+
+  try {
+    if (!process.env.MONGO_URI) {
+      console.warn("MONGO_URI not set - using mock data");
+      return;
+    }
+
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      retryWrites: true,
+      w: "majority",
+    });
+
+    isConnected = true;
+    console.log("✅ MongoDB Connected!");
+  } catch (err) {
+    console.error("⚠️ MongoDB Connection Error:", err.message);
+    console.log("Continuing with fallback...");
+  }
+};
+
+connectDB();
 
 // Admin User
 let users = [];
@@ -62,15 +86,12 @@ const initAdmin = async () => {
 };
 initAdmin();
 
-// ===== IMAGE STORAGE - Base64 in MongoDB (Vercel Compatible) =====
-// Since Vercel is serverless, we'll store images as Base64 in MongoDB
-
-// Multer setup for memory storage
+// ===== IMAGE STORAGE - Base64 in MongoDB =====
 const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype && file.mimetype.startsWith("image/")) {
       cb(null, true);
@@ -120,17 +141,29 @@ app.get("/api", (req, res) => {
 
 // ===== ADMIN LOGIN =====
 app.post("/api/admin/login", async (req, res) => {
-  const { username, password } = req.body;
-  const user = users.find((u) => u.username === username);
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    return res.status(400).json({ msg: "Invalid credentials" });
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ msg: "Username and password required" });
+    }
+
+    const user = users.find((u) => u.username === username);
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(400).json({ msg: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || "fallback",
+      { expiresIn: "7d" }
+    );
+
+    res.json({ token, msg: "Login successful" });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ msg: "Login error" });
   }
-  const token = jwt.sign(
-    { id: user._id },
-    process.env.JWT_SECRET || "fallback",
-    { expiresIn: "7d" }
-  );
-  res.json({ token, msg: "Login successful" });
 });
 
 app.get("/api/admin/profile", auth, async (req, res) => {
@@ -156,7 +189,7 @@ app.post(
       const { name, description, price, discount, stock, category, tags } =
         req.body;
 
-      if (!name || !price || !stock) {
+      if (!name || !price || stock === undefined) {
         return res.status(400).json({ msg: "Name, price and stock required" });
       }
 
@@ -164,7 +197,7 @@ app.post(
       const numStock = Number(stock);
       const numDiscount = discount ? Number(discount) : 0;
 
-      if (Number.isNaN(numPrice) || Number.isNaN(numStock)) {
+      if (isNaN(numPrice) || isNaN(numStock)) {
         return res.status(400).json({ msg: "Price and stock must be numbers" });
       }
 
@@ -173,21 +206,26 @@ app.post(
         ? req.files.map((file) => bufferToBase64(file.buffer, file.mimetype))
         : [];
 
+      // Generate SKU
+      const sku = `SKU-${Date.now()}`;
+
       const product = new Product({
-        name,
-        description,
+        name: name.trim(),
+        description: description ? description.trim() : "",
         price: numPrice,
         discount: numDiscount,
         stock: numStock,
-        category,
-        tags: tags ? JSON.parse(tags) : [],
-        images, // Store base64 images directly
+        category: category || "General",
+        tags: tags ? (typeof tags === "string" ? JSON.parse(tags) : tags) : [],
+        images,
+        sku,
       });
 
       await product.save();
+      console.log("✅ Product added:", product._id);
       res.json({ msg: "Product added successfully!", product });
     } catch (err) {
-      console.error(err);
+      console.error("Add product error:", err);
       res.status(500).json({ msg: err.message || "Error adding product" });
     }
   }
@@ -198,6 +236,7 @@ app.get("/api/admin/products", auth, async (req, res) => {
     const products = await Product.find().sort({ createdAt: -1 });
     res.json(products);
   } catch (err) {
+    console.error("Fetch products error:", err);
     res.status(500).json({ msg: "Error fetching products" });
   }
 });
@@ -208,7 +247,8 @@ app.get("/api/admin/products/:id", auth, async (req, res) => {
     if (!product) return res.status(404).json({ msg: "Not found" });
     res.json(product);
   } catch (err) {
-    res.status(500).json({ msg: "Error" });
+    console.error("Fetch single product error:", err);
+    res.status(500).json({ msg: "Error fetching product" });
   }
 });
 
@@ -221,15 +261,17 @@ app.put(
       const { name, description, price, discount, stock, category, tags } =
         req.body;
 
-      const update = {
-        name,
-        description,
-        price: price ? Number(price) : undefined,
-        discount: discount ? Number(discount) : 0,
-        stock: stock ? Number(stock) : undefined,
-        category,
-        tags: tags ? JSON.parse(tags) : [],
-      };
+      const update = {};
+
+      if (name) update.name = name.trim();
+      if (description) update.description = description.trim();
+      if (price) update.price = Number(price);
+      if (discount) update.discount = Number(discount);
+      if (stock !== undefined) update.stock = Number(stock);
+      if (category) update.category = category;
+      if (tags) {
+        update.tags = typeof tags === "string" ? JSON.parse(tags) : tags;
+      }
 
       // Convert new images to base64
       if (req.files && req.files.length > 0) {
@@ -238,10 +280,11 @@ app.put(
         );
       }
 
-      await Product.updateOne({ _id: req.params.id }, update);
+      await Product.findByIdAndUpdate(req.params.id, update, { new: true });
+      console.log("✅ Product updated:", req.params.id);
       res.json({ msg: "Product updated!" });
     } catch (err) {
-      console.error(err);
+      console.error("Update product error:", err);
       res.status(500).json({ msg: err.message || "Error updating" });
     }
   }
@@ -250,8 +293,10 @@ app.put(
 app.delete("/api/admin/products/:id", auth, async (req, res) => {
   try {
     await Product.findByIdAndDelete(req.params.id);
+    console.log("✅ Product deleted:", req.params.id);
     res.json({ msg: "Product deleted!" });
   } catch (err) {
+    console.error("Delete product error:", err);
     res.status(500).json({ msg: "Error deleting" });
   }
 });
@@ -259,21 +304,34 @@ app.delete("/api/admin/products/:id", auth, async (req, res) => {
 // ===== PUBLIC PRODUCTS =====
 app.get("/api/products", async (req, res) => {
   try {
+    console.log("📡 Fetching products from database...");
+
     const products = await Product.find().sort({ createdAt: -1 });
+
+    if (!products || products.length === 0) {
+      console.log("⚠️ No products found, returning empty array");
+      return res.json([]);
+    }
+
+    console.log(`✅ Found ${products.length} products`);
     res.json(products);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: "Error fetching products" });
+    console.error("❌ Error fetching products:", err.message);
+    res.status(500).json({
+      msg: "Error fetching products",
+      error: err.message,
+    });
   }
 });
 
 app.get("/api/products/:id", async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ msg: "Not found" });
+    if (!product) return res.status(404).json({ msg: "Product not found" });
     res.json(product);
   } catch (err) {
-    res.status(500).json({ msg: "Error" });
+    console.error("Fetch single product error:", err);
+    res.status(500).json({ msg: "Error fetching product" });
   }
 });
 
@@ -283,6 +341,7 @@ app.get("/api/admin/orders", auth, async (req, res) => {
     const orders = await Order.find().sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) {
+    console.error("Fetch orders error:", err);
     res.status(500).json({ msg: "Error fetching orders" });
   }
 });
@@ -292,11 +351,11 @@ app.post("/api/orders", async (req, res) => {
     const { productId, buyer, qty, subtotal, total } = req.body;
 
     if (!productId || !buyer || !qty) {
-      return res.status(400).json({ msg: "Missing fields" });
+      return res.status(400).json({ msg: "Missing required fields" });
     }
 
     const numQty = Number(qty);
-    if (!Number.isFinite(numQty) || numQty <= 0) {
+    if (!isFinite(numQty) || numQty <= 0) {
       return res.status(400).json({ msg: "Invalid quantity" });
     }
 
@@ -304,7 +363,9 @@ app.post("/api/orders", async (req, res) => {
     if (!product) return res.status(404).json({ msg: "Product not found" });
 
     if (product.stock < numQty) {
-      return res.status(400).json({ msg: "Insufficient stock" });
+      return res.status(400).json({
+        msg: `Insufficient stock. Only ${product.stock} available`,
+      });
     }
 
     const newOrder = new Order({
@@ -316,18 +377,20 @@ app.post("/api/orders", async (req, res) => {
         address: buyer.address,
       },
       qty: numQty,
-      subtotal,
-      total,
+      subtotal: subtotal || 0,
+      total: total || 0,
       status: "Pending",
     });
 
     await newOrder.save();
+
     product.stock -= numQty;
     await product.save();
 
+    console.log("✅ Order created:", newOrder._id);
     res.json({ msg: "Order created!", order: newOrder });
   } catch (err) {
-    console.error(err);
+    console.error("Create order error:", err);
     res.status(500).json({ msg: "Error creating order" });
   }
 });
@@ -335,7 +398,7 @@ app.post("/api/orders", async (req, res) => {
 app.put("/api/admin/orders/:id", auth, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ msg: "Not found" });
+    if (!order) return res.status(404).json({ msg: "Order not found" });
 
     const oldStatus = order.status;
     order.status = req.body.status || order.status;
@@ -350,9 +413,11 @@ app.put("/api/admin/orders/:id", auth, async (req, res) => {
     }
 
     await order.save();
+    console.log("✅ Order status updated:", order._id);
     res.json({ msg: "Status updated!", order });
   } catch (err) {
-    res.status(500).json({ msg: "Error updating" });
+    console.error("Update order error:", err);
+    res.status(500).json({ msg: "Error updating order" });
   }
 });
 
@@ -362,6 +427,7 @@ app.get("/api/admin/contact", auth, async (req, res) => {
     const messages = await Contact.find().sort({ createdAt: -1 });
     res.json(messages);
   } catch (err) {
+    console.error("Fetch contact messages error:", err);
     res.status(500).json({ msg: "Error fetching messages" });
   }
 });
@@ -372,6 +438,7 @@ app.delete("/api/admin/contact/:id", auth, async (req, res) => {
     if (!deleted) return res.status(404).json({ msg: "Not found" });
     res.json({ msg: "Deleted", id: req.params.id });
   } catch (err) {
+    console.error("Delete contact error:", err);
     res.status(500).json({ msg: "Error deleting" });
   }
 });
@@ -379,29 +446,51 @@ app.delete("/api/admin/contact/:id", auth, async (req, res) => {
 app.post("/api/contact", async (req, res) => {
   try {
     const { name, phone, email, message } = req.body;
+
     if (!name || !phone || !message) {
       return res.status(400).json({ msg: "Name, phone, message required" });
     }
-    const newMsg = new Contact({ name, phone, email, message });
+
+    const newMsg = new Contact({
+      name: name.trim(),
+      phone: phone.trim(),
+      email: email ? email.trim() : "",
+      message: message.trim(),
+    });
+
     await newMsg.save();
-    res.json({ msg: "Message sent!" });
+    console.log("✅ Contact message saved");
+    res.json({ msg: "Message sent successfully!" });
   } catch (err) {
+    console.error("Contact error:", err);
     res.status(500).json({ msg: "Error sending message" });
   }
 });
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ msg: "Endpoint not found" });
+  res.status(404).json({ msg: "Endpoint not found", path: req.path });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error("Global error:", err);
+  res.status(500).json({
+    msg: "Server error",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
 });
 
 // Start server
 const PORT = process.env.PORT || 5000;
+
 if (process.env.VERCEL) {
   module.exports = app;
 } else {
   app.listen(PORT, () => {
-    console.log(`\n🚀 BACKEND API RUNNING ON PORT ${PORT}`);
-    console.log(`→ Test: http://localhost:${PORT}/api/products`);
+    console.log(`\n🚀 ZIKRIYA DARBAR BACKEND RUNNING ON PORT ${PORT}`);
+    console.log(`📍 Test API: http://localhost:${PORT}/api/products`);
+    console.log(`📍 Admin Login: http://localhost:${PORT}/api/admin/login`);
+    console.log(`📍 API Health: http://localhost:${PORT}/api\n`);
   });
 }
